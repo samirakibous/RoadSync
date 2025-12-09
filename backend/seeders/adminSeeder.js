@@ -23,6 +23,7 @@ const seedAdmin = async () => {
             email: "admin@test.com",
             passwordHash,
             role: "admin",
+            mustChangePassword: false,
         });
 
         await admin.save();
