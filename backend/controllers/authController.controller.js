@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import User from '../models/User.model.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -19,6 +19,7 @@ export const login = async (req, res) => {
         res.json({
             message: 'Connexion reussie',
             success: true,
+            mustChangePassword: user.mustChangePassword,
             data: {
                 token,
                 user: { id: user._id, name: user.name, role: user.role }
