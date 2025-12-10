@@ -50,3 +50,16 @@ export const updatePassword = async (req, res, next) => {
     next(err);
   }
 };
+
+export const deleteDriver = async (req, res, next) => {
+  try {
+    console.log("req.params", req.params);
+    const deleteUser = await User.findByIdAndDelete(req.params.userId);
+    if (!deleteUser) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+    res.status(200).json({ message: "Utilisateur supprimé avec succès" });
+  } catch (err) {
+    next(err);
+  }
+};
