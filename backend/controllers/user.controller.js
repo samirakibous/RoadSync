@@ -1,4 +1,6 @@
 import { createDriverAndSendEmail } from "../services/user.services.js";
+import User from "../models/User.model.js";
+import bcrypt from "bcrypt";
 
 export const createDriver = async (req, res, next) => {
   try {
@@ -18,3 +20,4 @@ export const createDriver = async (req, res, next) => {
     next(err);
   }
 };
+

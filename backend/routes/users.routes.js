@@ -1,5 +1,5 @@
 import express from "express";
-import { createDriver } from "../controllers/userController.controller.js";
+import * as userController  from "../controllers/user.controller.js";
 import { isAuthenticated } from "../middleware/isAuthenticated.middleware.js";
 import { authorizeRoles } from "../middleware/authorisedRole.middleware.js";
 
@@ -9,7 +9,7 @@ router.post(
   "/drivers",
   isAuthenticated, 
   authorizeRoles("admin"), 
-  createDriver            
+  userController.createDriver            
 );
 
 export default router;
