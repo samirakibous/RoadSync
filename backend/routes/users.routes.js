@@ -11,5 +11,6 @@ router.post(
   authorizeRoles("admin"), 
   userController.createDriver            
 );
+router.patch("/update-password", isAuthenticated, userController.updatePassword);
 
 export default router;
