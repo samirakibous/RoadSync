@@ -1,6 +1,5 @@
-import { createDriver } from "../controllers/user.controller.js";
+import { createDriver ,deleteDriver , updatePassword , getAllDrivers} from "../controllers/user.controller.js";
 import * as userService from "../services/user.services.js";
-import { updatePassword } from "../controllers/user.controller.js";
 import User from "../models/User.model.js";
 import bcrypt from "bcrypt";
 
@@ -110,6 +109,95 @@ describe("Controller - updatePassword", () => {
     User.findById.mockRejectedValue(new Error("DB Error"));
 
     await updatePassword(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+  });
+});
+
+describe("Controller - deleteDriver", () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    req = { params: { userId: "123" } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    next = jest.fn();
+  });
+
+  it("devrait supprimer un chauffeur et renvoyer 200", async () => {
+    User.findByIdAndDelete.mockResolvedValue({ _id: "123", name: "test" });
+
+    await deleteDriver(req, res, next);
+
+    expect(User.findByIdAndDelete).toHaveBeenCalledWith("123");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Utilisateur supprimé avec succès"
+    });
+  });
+
+  it("devrait renvoyer 404 si l'utilisateur n'existe pas", async () => {
+    User.findByIdAndDelete.mockResolvedValue(null);
+
+    await deleteDriver(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Utilisateur non trouvé"
+    });
+  });
+
+  it("devrait appeler next en cas d'erreur", async () => {
+    User.findByIdAndDelete.mockRejectedValue(new Error("DB error"));
+
+    await deleteDriver(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+  });
+});
+
+describe("Controller - getAllDrivers", () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    req = { query: { page: "1", limit: "10" } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    next = jest.fn();
+  });
+
+  it("devrait retourner la liste des chauffeurs", async () => {
+
+    const mockDrivers = [
+      { _id: "1", name: "Driver 1" },
+      { _id: "2", name: "Driver 2" },
+    ];
+
+    const skipMock = jest.fn().mockReturnThis();
+    const limitMock = jest.fn().mockResolvedValue(mockDrivers);
+
+    User.find.mockReturnValue({
+      skip: skipMock,
+      limit: limitMock
+    });
+
+    await getAllDrivers(req, res, next);
+
+    expect(User.find).toHaveBeenCalledWith({ role: "driver" });
+    expect(skipMock).toHaveBeenCalledWith(0);
+    expect(limitMock).toHaveBeenCalledWith(10);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Liste des chauffeurs",
+      data: mockDrivers
+    });
+  });
+
+  it("devrait appeler next en cas d'erreur", async () => {
+    User.find.mockImplementation(() => {
+      throw new Error("DB error");
+    });
+
+    await getAllDrivers(req, res, next);
 
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
