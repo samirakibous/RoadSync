@@ -63,3 +63,19 @@ export const deleteDriver = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getAllDrivers= async (req,res,next)=>{
+  try{
+  const page =parseInt(req.query.page)||1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const drivers = await User.find({ role: "driver" }).skip(skip).limit(limit);
+  res.status(200).json({
+    message : "Liste des chauffeurs",
+    data : drivers
+  });
+  }
+  catch(err){
+    next(err);
+  }
+}

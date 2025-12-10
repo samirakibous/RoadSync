@@ -14,4 +14,6 @@ router.post(
 router.patch("/update-password", isAuthenticated, userController.updatePassword);
 
 router.delete("/delete/:userId", isAuthenticated, authorizeRoles("admin"), userController.deleteDriver);
+
+router.get("/drivers", isAuthenticated, authorizeRoles("admin"), userController.getAllDrivers);
 export default router;
