@@ -11,6 +11,7 @@ import pneu from './routes/pneu.routes.js';
 import maintenance from './routes/maintenance.routes.js';
 import rules from './routes/maintenanceRule.routes.js';
 import notifications from './routes/notification.routes.js';
+import fuelLog from './routes/fuelLog.routes.js';
 import dotenv from 'dotenv';
 import errorHandler from './middleware/errorHandler.middleware.js';
 import './events/vidangeListener.js';
@@ -33,6 +34,8 @@ app.use('/api/pneus', pneu);
 app.use('/api/maintenance-rules', rules);
 app.use('/api/maintenance', maintenance);
 app.use('/api/notifications', notifications); 
+app.use('/api/fuelLog', fuelLog);
+app.use("/uploads/factures", express.static("uploads/factures"));
 
 app.use(errorHandler);
 
