@@ -1,13 +1,57 @@
 const errorHandler = (err, req, res, next) => {
-    console.error(err);
-    const statusCode = err.statusCode || 500;
-    const message = err.message || "Une erreur est survenue sur le serveur";
-  
-    res.status(statusCode).json({
-      success: false,
-      message,
-      stack: err.stack,
-    });
-}
+  console.error(err);
+
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "Something went wrong";
+
+  // Yup validation errors
+  if (err.name === "ValidationError" && err.errors) {
+    statusCode = 400;
+
+    if (Array.isArray(err.errors)) {
+      message = err.errors.join(", ");
+    } else if (typeof err.errors === "object") {
+      message = Object.values(err.errors).map(e => e.message || e).join(", ");
+    } else {
+      message = err.message;
+    }
+  }
+
+  // Mongoose invalid ObjectId
+  if (err.name === "CastError") {
+    statusCode = 400;
+    message = "Invalid ID format";
+  }
+
+  // Mongoose duplicate key
+  if (err.code === 11000) {
+    statusCode = 400;
+    message = `Duplicate field value: ${Object.keys(err.keyValue).join(", ")}`;
+  }
+
+  // JWT errors
+  if (err.name === "JsonWebTokenError") {
+    statusCode = 401;
+    message = "Invalid token";
+  }
+
+  if (err.name === "TokenExpiredError") {
+    statusCode = 401;
+    message = "Token expired";
+  }
+
+  const response = {
+    statusCode,
+    message,
+    error: err.name || "Error",
+  };
+
+  // Only show stack trace in development
+  if (process.env.NODE_ENV !== "production") {
+    response.stack = err.stack;
+  }
+
+  res.status(statusCode).json(response);
+};
 
 export default errorHandler;
