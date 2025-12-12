@@ -9,7 +9,6 @@ export const MaintenanceService = {
   create: async (data) => {
     const { resourceType, resource, rule } = data;
 
-    // Vérifier que la ressource existe
     let Model;
     if (resourceType === "truck") Model = Truck;
     else if (resourceType === "trailer") Model = Trailer;
@@ -19,13 +18,11 @@ export const MaintenanceService = {
     const resourceExists = await Model.findById(resource);
     if (!resourceExists) throw new Error(`${resourceType} non trouvé`);
 
-    // Vérifier que la règle existe (si fournie)
     if (rule) {
       const ruleExists = await MaintenanceRule.findById(rule);
       if (!ruleExists) throw new Error("Règle de maintenance non trouvée");
     }
 
-   // Création de la maintenance
     const maintenance = await Maintenance.create(data);
     // await maintenance.populate("resource");
     // await maintenance.populate("rule");
@@ -44,7 +41,6 @@ export const MaintenanceService = {
 
   delete: (id) => Maintenance.findByIdAndDelete(id),
 
-  // 🔹 Vérifier si une maintenance est due en km
   getMaintenancesDueForKm: async () => {
     const maintenances = await Maintenance.find()
       .populate("resource")
@@ -56,7 +52,6 @@ export const MaintenanceService = {
     });
   },
 
-  // 🔹 Vérifier si une maintenance est due en date
   getMaintenancesDueForDate: async () => {
     const maintenances = await Maintenance.find()
       .populate("resource")
@@ -71,7 +66,7 @@ export const MaintenanceService = {
     });
   },
 
-  // 🔹 Calculer prochain km ou date de maintenance pour un objet Maintenance
+  // Calculer prochain km ou date de maintenance pour un objet Maintenance
   // calculateNextMaintenance: (maintenance) => {
   //   let nextKm = null;
   //   let nextDate = null;
@@ -91,12 +86,11 @@ export const MaintenanceService = {
  notifyDueVidanges: async () => {
     console.log("🔍 Vérification des maintenances dues...");
     
-    // 1️⃣ Vérifier les maintenances existantes
     const maintenances = await Maintenance.find()
       .populate("resource")
       .populate("rule");
 
-    console.log(`📊 Total maintenances trouvées: ${maintenances.length}`);
+    console.log(`Total maintenances trouvées: ${maintenances.length}`);
 
     const today = new Date();
     let notificationCount = 0;
@@ -107,12 +101,12 @@ export const MaintenanceService = {
       console.log(`Rule populated: ${!!m.rule}`);
       
       if (!m.resource) {
-        console.log(`❌ Resource non populée`);
+        console.log(`Resource non populée`);
         return;
       }
       
       if (!m.rule) {
-        console.log(`❌ Rule non populée`);
+        console.log(`Rule non populée`);
         return;
       }
 
@@ -130,7 +124,7 @@ export const MaintenanceService = {
       console.log(`NextKm: ${nextKm}, Due? ${isDue} (km:${isDueKm}, date:${isDueDate})`);
 
       if (isDue) {
-        console.log(`✅ NOTIFICATION ÉMISE pour ${m.resource.immatriculation || m.resource._id}`);
+        console.log(`NOTIFICATION ÉMISE pour ${m.resource.immatriculation || m.resource._id}`);
         
         notificationEmitter.emit("vidangeDue", {
           type: m.rule.action,
@@ -144,10 +138,10 @@ export const MaintenanceService = {
       }
     });
 
-    // 2️⃣ Vérifier les trucks SANS AUCUNE maintenance
-    console.log('\n🔍 Vérification des trucks sans maintenance...');
+    // Vérifier les trucks sans maintenance
+    console.log('\n Vérification des trucks sans maintenance...');
     const trucks = await Truck.find();
-    console.log(`📊 Total trucks trouvés: ${trucks.length}`);
+    console.log(`Total trucks trouvés: ${trucks.length}`);
 
     for (const truck of trucks) {
       const hasMaintenance = await Maintenance.findOne({ 
@@ -160,14 +154,14 @@ export const MaintenanceService = {
         
         // Alerte si le truck a plus de 10000 km sans aucune maintenance
         if (truck.kilometrage >= 10000) {
-          console.log(`🚨 ALERTE : Truck sans maintenance et >10000 km !`);
+          console.log(`ALERTE : Truck sans maintenance et >10000 km !`);
           
           notificationEmitter.emit("vidangeDue", {
             type: "premiere_maintenance",
             maintenanceId: null,
             resourceType: "truck",
             resource: truck,
-            message: `🚨 URGENT : Truck ${truck.immatriculation} n'a JAMAIS eu de maintenance (${truck.kilometrage} km) !`
+            message: `URGENT : Truck ${truck.immatriculation} n'a JAMAIS eu de maintenance (${truck.kilometrage} km) !`
           });
           
           notificationCount++;
@@ -175,6 +169,6 @@ export const MaintenanceService = {
       }
     }
 
-    console.log(`\n✅ ${notificationCount} maintenance(s) due(s) détectée(s)`);
+    console.log(`\n ${notificationCount} maintenance(s) due(s) détectée(s)`);
   }
 };
