@@ -9,17 +9,26 @@ const maintenanceSchema = new mongoose.Schema({
   resource: { 
     type: mongoose.Schema.Types.ObjectId, 
     required: true, 
-    refPath: 'resourceType' 
-  }, // référence dynamique au modèle correspondant
+    refPath: 'resourceModel' 
+}, //dynamic ref
   rule: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'MaintenanceRule' 
-  }, // règle appliquée, si applicable
+  },
   notes: { type: String },
   
   kmAtMaintenance: { type: Number, min: 0 },
 }, {
   timestamps: true
+});
+
+maintenanceSchema.virtual('resourceModel').get(function() {
+  const typeMap = {
+    'truck': 'Truck',
+    'trailer': 'Trailer',
+    'pneu': 'Pneu'
+  };
+  return typeMap[this.resourceType];
 });
 
 export default mongoose.model('Maintenance', maintenanceSchema);
