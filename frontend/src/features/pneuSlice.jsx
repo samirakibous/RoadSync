@@ -45,7 +45,7 @@ export const createPneu = createAsyncThunk(
 /* UPDATE */
 export const updatePneu = createAsyncThunk(
   "pneus/updatePneu",
-  async ({ id, pneuData }, { getState, rejectWithValue }) => { // ✅ Changé tireData en pneuData
+  async ({ id, pneuData }, { getState, rejectWithValue }) => { 
     try {
       const { token } = getState().auth;
       const res = await fetch(`http://localhost:3000/api/pneus/${id}`, {
@@ -85,7 +85,7 @@ export const deletePneu = createAsyncThunk(
 ========================= */
 const initialState = {
   list: [],
-  selectedPneu: null, // ✅ Changé selectedTire en selectedPneu
+  selectedPneu: null, 
   loading: false,
   error: null,
 };
@@ -94,7 +94,7 @@ const pneuSlice = createSlice({
   name: "pneus",
   initialState,
   reducers: {
-    selectPneu: (state, action) => { state.selectedPneu = action.payload; }, // ✅ Cohérent
+    selectPneu: (state, action) => { state.selectedPneu = action.payload; },
     clearSelectedPneu: (state) => { state.selectedPneu = null; },
   },
   extraReducers: (builder) => {

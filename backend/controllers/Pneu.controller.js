@@ -9,7 +9,6 @@ export const createPneu = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Un pneu ne peut pas être attaché à la fois à un truck et à une trailer." });
     }
 
-    //vérifier si le pneu existe déjà pour ce truck ou trailer
     const existingPneu = await Pneu.findOne({ position, truck, trailer });
     if (existingPneu) {
       return res.status(400).json({ success: false, message: "Un pneu existe déjà à cette position pour ce véhicule." });
@@ -38,7 +37,16 @@ export const createPneu = async (req, res, next) => {
 
 export const getAllPneus = async (req, res, next) => {
   try {
-    const pneus = await Pneu.find().populate('truck trailer');
+    const pneusRaw = await Pneu.find();
+    console.log("Pneus bruts:", JSON.stringify(pneusRaw, null, 2));
+   
+    const pneus = await Pneu.find()
+      .populate("truck", "immatriculation marque modele")
+      .populate("trailer", "plateNumber type")
+      .sort({ createdAt: -1 });
+      
+    console.log("Pneus populés:", JSON.stringify(pneus, null, 2));
+    
     res.status(200).json({
       success: true,
       message: "Liste des pneus",
@@ -51,7 +59,10 @@ export const getAllPneus = async (req, res, next) => {
 
 export const getPneuById = async (req, res, next) => {
   try {
-    const pneu = await Pneu.findById(req.params.id).populate('truck trailer');
+    const pneu = await Pneu.findById(req.params.id)
+      .populate("truck", "immatriculation marque modele")
+      .populate("trailer", "plateNumber type");
+      
     if (!pneu) return res.status(404).json({ success: false, message: "Pneu non trouvé" });
 
     res.status(200).json({
@@ -85,6 +96,9 @@ export const updatePneu = async (req, res, next) => {
     pneu.dateInstallation = dateInstallation ?? pneu.dateInstallation;
 
     await pneu.save();
+    
+    await pneu.populate("truck", "immatriculation marque modele");
+    await pneu.populate("trailer", "plateNumber type");
 
     res.status(200).json({
       success: true,
