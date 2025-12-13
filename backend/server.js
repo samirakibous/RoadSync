@@ -16,12 +16,18 @@ import dotenv from 'dotenv';
 import errorHandler from './middleware/errorHandler.middleware.js';
 import './events/vidangeListener.js';
 import { startMaintenanceScheduler } from "./scheduler/maintenanceScheduler.js";
+// import cors from 'cors';
+
 
 dotenv.config();
 const app = express();
 
-// Middleware
-app.use(cors());
+
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+  }
+));
 app.use(express.json());
 
 // Routes
