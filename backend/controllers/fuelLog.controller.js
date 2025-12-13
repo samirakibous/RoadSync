@@ -8,12 +8,13 @@ export const createFuelLog = async (req, res) => {
     let factureType = null;
 
     if (req.file) {
-      factureUrl = `/uploads/factures/${req.file.filename}`;
+      factureUrl = `/uploads/fuelLogs/${req.file.filename}`;
 
       // image ou pdf
       factureType = req.file.mimetype === "application/pdf" ? "pdf" : "image";
     }
-
+console.log("BODY:", req.body);
+console.log("MONTANT:", montant, typeof montant);
     const fuelLog = await FuelLog.create({
       trip,
       montant,
@@ -33,7 +34,10 @@ export const createFuelLog = async (req, res) => {
 
 export const getAllFuelLogs = async (req, res) => {
   try {
-    const fuelLogs = await FuelLog.find().populate("trip");
+    const fuelLogs = await FuelLog.find()
+      .populate("trip", "lieuDepart lieuArrivee datDepart status")
+      .sort({ createdAt: -1 });
+      
     res.status(200).json({ success: true, data: fuelLogs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -42,14 +46,15 @@ export const getAllFuelLogs = async (req, res) => {
 
 export const getFuelLogByTrip = async (req, res) => {
   try {
-    const { tripId } = req.params;
-    const fuelLogs = await FuelLog.find({ trip: tripId }).populate("trip");
+    const { id } = req.params;
+    const fuelLogs = await FuelLog.find({ trip: id })
+      .populate("trip", "lieuDepart lieuArrivee datDepart status");
+      
     res.status(200).json({ success: true, data: fuelLogs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 
 export const deleteFuelLog = async (req, res) => {
   try {
@@ -59,4 +64,4 @@ export const deleteFuelLog = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-}
+};
