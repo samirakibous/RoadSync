@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Truck, Mail, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../features/authSlice.js";
+import { setCredentials } from "../features/authSlice.jsx";
 import { useNavigate } from 'react-router-dom';
 
 
@@ -16,47 +16,48 @@ export default function Login() {
     { text: 'Au moins 8 caractères', met: password.length >= 8 },
     { text: 'Lettres et chiffres', met: /[a-zA-Z]/.test(password) && /[0-9]/.test(password) }
   ];
-const dispatch = useDispatch();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-const handleSubmit = async () => {
-  setLoading(true);
-  setError("");
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
 
-  try {
-    const response = await fetch("http://localhost:3000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
- console.log("la reponse",response);
-    const data = await response.json();
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      console.log("la reponse", response);
+      const data = await response.json();
+      console.log("la data", data);
+      if (!response.ok) {
+        setError(data.message || "Erreur lors de la connexion");
+        setLoading(false);
+        return;
+      }
 
-    if (!response.ok) {
-      setError(data.message || "Erreur lors de la connexion");
+      dispatch(setCredentials({
+        user: data.data.user,
+        token: data.data.token,
+      }));
+
+      // Redirection si tu veux plus tard
+      navigate("/dashboard");
+
       setLoading(false);
-      return;
+
+    } catch (err) {
+      setError("Impossible de se connecter au serveur.");
+      setLoading(false);
     }
+  };
 
-    dispatch(setCredentials({
-      user: data.data.user,
-      token: data.data.token,
-    }));
-
-    // Redirection si tu veux plus tard
-    navigate("/dashboard");
-
-    setLoading(false);
-
-  } catch (err) {
-    setError("Impossible de se connecter au serveur.");
-    setLoading(false);
-  }
-};
-
-// Soumettre le formulaire avec Entrée
-const handleKeyPress = (e) => {
-  if (e.key === "Enter") handleSubmit();
-};
+  // Soumettre le formulaire avec Entrée
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") handleSubmit();
+  };
 
 
   return (
@@ -64,14 +65,14 @@ const handleKeyPress = (e) => {
       {/* Section gauche - Photo réelle */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#2a6570]/20 to-[#3b8492]/30 z-10"></div>
-        
+
         {/* Photo de camion sur route - Image réelle via Unsplash */}
-        <img 
-          src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop" 
+        <img
+          src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop"
           alt="Camion de transport"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        
+
         {/* Texte sur l'image */}
         <div className="relative z-20 flex flex-col justify-end p-12 text-white">
           <div className="mb-8">
@@ -81,7 +82,7 @@ const handleKeyPress = (e) => {
           </div>
           <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">SyncRoad</h1>
           <p className="text-lg text-white/90 leading-relaxed max-w-md drop-shadow-md">
-            Votre solution complète de gestion de transport et logistique. 
+            Votre solution complète de gestion de transport et logistique.
             Optimisez vos livraisons et suivez vos véhicules en temps réel.
           </p>
         </div>
@@ -151,7 +152,7 @@ const handleKeyPress = (e) => {
                 <div className="mt-3 space-y-2">
                   {passwordRequirements.map((req, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 
+                      <CheckCircle2
                         className={`w-4 h-4 ${req.met ? 'text-[#3b8492]' : 'text-gray-300'}`}
                       />
                       <span className={req.met ? 'text-[#3b8492]' : 'text-gray-500'}>
