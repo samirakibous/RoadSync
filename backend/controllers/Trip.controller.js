@@ -45,9 +45,10 @@ export const createTrip = async (req, res, next) => {
 export const getAllTrips = async (req, res, next) => {
   try {
     const trips = await Trip.find()
-      .populate("truck")
-      .populate("trailer")
-      .populate("driver");
+      .populate("truck", "immatriculation marque modele")
+      .populate("trailer", "plateNumber type")
+      .populate("driver", "name email")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -62,9 +63,9 @@ export const getAllTrips = async (req, res, next) => {
 export const getTripById = async (req, res, next) => {
   try {
     const trip = await Trip.findById(req.params.id)
-      .populate("truck")
-      .populate("trailer")
-      .populate("driver");
+      .populate("truck", "immatriculation marque modele")
+      .populate("trailer", "plateNumber type")
+      .populate("driver", "name email");
 
     if (!trip) return res.status(404).json({ success: false, message: "Trajet non trouvé" });
 
@@ -85,6 +86,11 @@ export const updateTrip = async (req, res, next) => {
     }
 
     await trip.save();
+
+    // Populate avant de renvoyer
+    await trip.populate("truck", "immatriculation marque modele");
+    await trip.populate("trailer", "plateNumber type");
+    await trip.populate("driver", "name email");
 
     res.status(200).json({
       success: true,

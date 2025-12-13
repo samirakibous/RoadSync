@@ -41,7 +41,9 @@ app.use('/api/maintenance-rules', rules);
 app.use('/api/maintenance', maintenance);
 app.use('/api/notifications', notifications); 
 app.use('/api/fuelLog', fuelLog);
-app.use("/uploads/factures", express.static("uploads/factures"));
+
+// ✅ Servir les fichiers uploadés
+app.use("/uploads/fuelLogs", express.static("public/uploads/fuelLogs"));
 
 app.use(errorHandler);
 

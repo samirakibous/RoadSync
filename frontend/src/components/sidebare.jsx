@@ -7,6 +7,7 @@ import {
   MapPin,
   Settings,
   BarChart3,
+  Fuel,
   X
 } from 'lucide-react';
 import { NavLink } from "react-router-dom";
@@ -14,11 +15,11 @@ import { NavLink } from "react-router-dom";
 
 export default function Sidebare() {
   const menuItems = [
-    { icon: Home, label: 'FuelLog' },
+    { icon: Fuel, label: 'FuelLog',path:'/fuel-logs' },
     { icon: Truck, label: 'truck', path: '/trucks' },
     { icon: Package, label: 'trailer', path: '/trailers' },
     { icon: Users, label: 'Chauffeurs', path: '/chauffeurs' },
-    { icon: MapPin, label: 'trajet', active: false },
+    { icon: MapPin, label: 'trajet', path: '/trips' },
     { icon: BarChart3, label: 'maintenance', active: false },
     { icon: BarChart3, label: 'maintenance rule', active: false },
     { icon: Settings, label: 'pneu',path: '/pneus' },

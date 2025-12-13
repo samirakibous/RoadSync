@@ -5,6 +5,8 @@ import TrucksPage from "./pages/TrucksPage";
 import TrailersPage from "./pages/TrailersPage";
 import UsersPage from "./pages/UsersPage";
 import PneusPage from "./pages/PneusPage";
+import FuelLogsPage from "./pages/FuelLogsPage";
+import TripsPage from "./pages/TripsPage";
 
 function AppRouter() {
   return (
@@ -16,6 +18,8 @@ function AppRouter() {
         <Route path="/trailers" element={<TrailersPage />} />
         <Route path="/chauffeurs" element={<UsersPage />} />
         <Route path="/pneus" element={<PneusPage />} />
+        <Route path="/fuel-logs" element={<FuelLogsPage />} />
+        <Route path="/trips" element={<TripsPage />} />
       </Routes>
     </Router>
   );

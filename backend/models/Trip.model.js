@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const tripSchema = new mongoose.Schema({
     truck: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
     trailer: { type: mongoose.Schema.Types.ObjectId, ref: 'Trailer', required: true },
-    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
     lieuDepart: { type: String, required: true },
     lieuArrivee: { type: String, required: true },
