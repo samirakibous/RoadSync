@@ -11,9 +11,9 @@ router.post(
   authorizeRoles("admin"), 
   userController.createDriver            
 );
-router.patch("/update-password", isAuthenticated, userController.updatePassword);
+router.patch("/drivers/update-password/:userId", isAuthenticated, userController.updatePassword);
 
-router.delete("/delete/:userId", isAuthenticated, authorizeRoles("admin"), userController.deleteDriver);
+router.delete("/drivers/:userId", isAuthenticated, authorizeRoles("admin"), userController.deleteDriver);
 
 router.get("/drivers", isAuthenticated, authorizeRoles("admin"), userController.getAllDrivers);
 export default router;
