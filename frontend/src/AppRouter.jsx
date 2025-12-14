@@ -7,6 +7,8 @@ import UsersPage from "./pages/UsersPage";
 import PneusPage from "./pages/PneusPage";
 import FuelLogsPage from "./pages/FuelLogsPage";
 import TripsPage from "./pages/TripsPage";
+import MaintenanceRulesPage from "./pages/MaintenanceRulesPage";
+import MaintenancePage from "./pages/MaintenancePage";
 
 function AppRouter() {
   return (
@@ -20,6 +22,8 @@ function AppRouter() {
         <Route path="/pneus" element={<PneusPage />} />
         <Route path="/fuel-logs" element={<FuelLogsPage />} />
         <Route path="/trips" element={<TripsPage />} />
+        <Route path="/maintenance-rules" element={<MaintenanceRulesPage />} />
+        <Route path="/maintenance" element={<MaintenancePage />} />
       </Routes>
     </Router>
   );

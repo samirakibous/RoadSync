@@ -6,6 +6,8 @@ import userReducer from "../features/userSlice";
 import pneuReducer from "../features/pneuSlice";
 import fuelLogReducer from "../features/fuelLogSlice";
 import tripReducer from "../features/tripSlice";
+import maintenanceRuleReducer from "../features/maintenanceRuleSlice";
+import maintenanceReducer from "../features/maintenanceSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +18,7 @@ export const store = configureStore({
     pneus: pneuReducer,
     fuelLog: fuelLogReducer,
     trips: tripReducer, 
+    maintenanceRules: maintenanceRuleReducer,
+    maintenances: maintenanceReducer,
   },
 });

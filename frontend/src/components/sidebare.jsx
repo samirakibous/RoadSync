@@ -8,6 +8,7 @@ import {
   Settings,
   BarChart3,
   Fuel,
+  Wrench,
   X
 } from 'lucide-react';
 import { NavLink } from "react-router-dom";
@@ -20,8 +21,8 @@ export default function Sidebare() {
     { icon: Package, label: 'trailer', path: '/trailers' },
     { icon: Users, label: 'Chauffeurs', path: '/chauffeurs' },
     { icon: MapPin, label: 'trajet', path: '/trips' },
-    { icon: BarChart3, label: 'maintenance', active: false },
-    { icon: BarChart3, label: 'maintenance rule', active: false },
+    { icon: BarChart3, label: 'maintenance', path: '/maintenance' },
+    { icon: Wrench, label: 'maintenance rule', path: '/maintenance-rules' },
     { icon: Settings, label: 'pneu',path: '/pneus' },
   ];
 
