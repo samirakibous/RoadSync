@@ -4,11 +4,12 @@ import { notificationEmitter } from '../events/notificationEmitter.js';
 export const createMaintenance = async (req, res, next) => {
   try {
     const maintenance = await MaintenanceService.create(req.body);
-// Émettre l'événement
+    
     notificationEmitter.emit('maintenance_created', {
       maintenanceId: maintenance._id,
       resourceId: maintenance.resource,
     });
+    
     res.status(201).json({
       success: true,
       message: "Maintenance créée avec succès",
@@ -84,6 +85,20 @@ export const deleteMaintenance = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Maintenance supprimée",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const completeMaintenance = async (req, res, next) => {
+  try {
+    const maintenance = await MaintenanceService.completeMaintenance(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Maintenance terminée avec succès",
+      data: maintenance,
     });
   } catch (err) {
     next(err);

@@ -16,4 +16,6 @@ router.delete("/:id", isAuthenticated, authorizeRoles("admin"), maintenanceContr
 router.patch("/:id", isAuthenticated, authorizeRoles("admin"), validate(maintenanceSchema), maintenanceController.updateMaintenance);
 
 router.get("/:id", isAuthenticated, authorizeRoles("admin"), maintenanceController.getMaintenanceById);
+
+router.patch("/:id/complete", isAuthenticated, authorizeRoles("admin"), maintenanceController.completeMaintenance);
 export default router;

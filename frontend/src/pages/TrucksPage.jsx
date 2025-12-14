@@ -97,7 +97,7 @@ export default function TrucksPage() {
                   <td className="p-3">{truck.kilometrage}</td>
                   <td className="p-3">{truck.modele}</td>
                   <td className="p-3">
-                    <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">{truck.statut}</span>
+                    <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">{truck.status}</span>
                   </td>
                   <td className="p-3 flex gap-2">
                     <button
@@ -131,7 +131,7 @@ export default function TrucksPage() {
             <p><b>Immatriculation :</b> {selectedTruck.immatriculation}</p>
             <p><b>Kilométrage :</b> {selectedTruck.kilometrage}</p>
             <p><b>Modèle :</b> {selectedTruck.modele}</p>
-            <p><b>Statut :</b> {selectedTruck.statut}</p>
+            <p><b>Statut :</b> {selectedTruck.status}</p>
             <p><b>Date d'achat :</b> {selectedTruck.dateAchat}</p>
             <p><b>Dernière maintenance :</b> {selectedTruck.derniereMaintenance}</p>
             <p><b>Créé le :</b> {selectedTruck.createdAt}</p>

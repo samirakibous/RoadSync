@@ -14,7 +14,7 @@ const { truckStatus } = useSelector((state) => state.trucks);
     kilometrage: "",
     marque: "",
     modele: "",
-    statut: "",
+    status: "",
     dateAchat: "",
     derniereMaintenance: "",
   });
@@ -112,9 +112,9 @@ const handleSubmit = () => {
                 Statut *
               </label>
             <select
-            value={modalTruck.statut}
+            value={modalTruck.status}
             onChange={(e) =>
-                setModalTruck({ ...modalTruck, statut: e.target.value })
+                setModalTruck({ ...modalTruck, status: e.target.value })
             }
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492] focus:border-[#3b8492] outline-none transition bg-white"
             >

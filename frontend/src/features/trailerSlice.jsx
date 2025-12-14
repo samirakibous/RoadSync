@@ -98,7 +98,7 @@ const initialState = {
   selectedTrailer: null,
   loading: false,
   error: null,
-  trailerStatus: ["available", "on_trip", "maintenance", "unavailable"],
+  trailerStatus: ["disponible","en_mission", "en_maintenance",  "hors_service"],
 };
 
 /* =========================

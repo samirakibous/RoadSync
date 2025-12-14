@@ -50,6 +50,8 @@ export default function PneuModal({ pneu, onClose, onSave }) {
       trailer: modalPneu.trailer || null,
     };
 
+    console.log("Envoi du pneu au backend:", dataToSave);
+
     onSave(dataToSave);
     onClose();
   };

@@ -52,7 +52,7 @@ export default function TrailerModal({ trailer, onClose, onSave, trailerStatus }
           {/* Statut */}
           <div>
             <label className="block text-sm font-semibold text-[#2a6570] mb-2">Statut</label>
-            <select value={modalTrailer.statut} onChange={(e)=>setModalTrailer({...modalTrailer, status:e.target.value})} className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]">
+            <select value={modalTrailer.status} onChange={(e)=>setModalTrailer({...modalTrailer, status:e.target.value})} className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]">
               <option value="">Sélectionner un statut</option>
               {trailerStatus.map((s,i)=><option key={i} value={s}>{s}</option>)}
             </select>

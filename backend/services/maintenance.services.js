@@ -24,8 +24,39 @@ export const MaintenanceService = {
     }
 
     const maintenance = await Maintenance.create(data);
-    // await maintenance.populate("resource");
-    // await maintenance.populate("rule");
+
+    // ✅ Mettre à jour le statut de la ressource en "en_maintenance"
+    console.log(`🔧 Maintenance créée pour ${resourceType} ${resource}`);
+    const updated = await Model.findByIdAndUpdate(
+      resource, 
+      { 
+        status: "en_maintenance",
+        lastMaintenance: new Date() 
+      },
+      { new: true }
+    );
+    console.log(`✅ Statut mis à jour: ${updated?.status}`);
+
+    // ✅ Si c'est un pneu, mettre le véhicule associé hors service
+    if (resourceType === "pneu" && updated) {
+      if (updated.truck) {
+        await Truck.findByIdAndUpdate(
+          updated.truck,
+          { status: 'hors_service' },
+          { new: true }
+        );
+        console.log(`✅ Truck ${updated.truck} mis hors_service (pneu en maintenance)`);
+      }
+      
+      if (updated.trailer) {
+        await Trailer.findByIdAndUpdate(
+          updated.trailer,
+          { status: 'hors_service' },
+          { new: true }
+        );
+        console.log(`✅ Trailer ${updated.trailer} mis hors_service (pneu en maintenance)`);
+      }
+    }
 
     return maintenance;
   },
@@ -33,7 +64,7 @@ export const MaintenanceService = {
   findAll: () => Maintenance.find()
     .populate({
       path: 'resource',
-      select: 'immatriculation marque modele plateNumber type position'
+      select: 'immatriculation marque modele plateNumber type position status'
     })
     .populate("rule", "type action")
     .sort({ createdAt: -1 }),
@@ -41,7 +72,7 @@ export const MaintenanceService = {
   findById: (id) => Maintenance.findById(id)
     .populate({
       path: 'resource',
-      select: 'immatriculation marque modele plateNumber type position'
+      select: 'immatriculation marque modele plateNumber type position status'
     })
     .populate("rule", "type action"),
 
@@ -50,58 +81,126 @@ export const MaintenanceService = {
     if (maintenance) {
       await maintenance.populate({
         path: 'resource',
-        select: 'immatriculation marque modele plateNumber type position'
+        select: 'immatriculation marque modele plateNumber type position status'
       });
       await maintenance.populate("rule", "type action");
     }
     return maintenance;
   },
 
-  delete: (id) => Maintenance.findByIdAndDelete(id),
+  delete: async (id) => {
+    const maintenance = await Maintenance.findById(id);
+    if (!maintenance) return null;
 
-  getMaintenancesDueForKm: async () => {
-    const maintenances = await Maintenance.find()
-      .populate("resource")
-      .populate("rule");
+    // ✅ Remettre le statut de la ressource à "disponible"
+    let Model;
+    if (maintenance.resourceType === "truck") Model = Truck;
+    else if (maintenance.resourceType === "trailer") Model = Trailer;
+    else if (maintenance.resourceType === "pneu") Model = Pneu;
 
-    return maintenances.filter(m => {
-      if (!m.rule || !m.rule.intervalKm) return false;
-      return m.resource.kilometrage >= m.kmAtMaintenance + m.rule.intervalKm;
-    });
+    if (Model) {
+      console.log(`🗑️ Suppression maintenance ${id}`);
+      const updated = await Model.findByIdAndUpdate(
+        maintenance.resource, 
+        { status: "disponible" },
+        { new: true }
+      );
+      console.log(`✅ Ressource ${maintenance.resource} remise à: ${updated?.status}`);
+
+      // ✅ Si c'est un pneu, vérifier si on peut remettre le véhicule disponible
+      if (maintenance.resourceType === "pneu" && updated) {
+        if (updated.truck) {
+          const problematicPneus = await Pneu.find({
+            truck: updated.truck,
+            _id: { $ne: updated._id },
+            status: { $in: ['en_maintenance', 'hors_service'] }
+          });
+
+          if (problematicPneus.length === 0) {
+            await Truck.findByIdAndUpdate(updated.truck, { status: 'disponible' });
+            console.log(`✅ Truck ${updated.truck} remis disponible (tous les pneus OK)`);
+          }
+        }
+
+        if (updated.trailer) {
+          const problematicPneus = await Pneu.find({
+            trailer: updated.trailer,
+            _id: { $ne: updated._id },
+            status: { $in: ['en_maintenance', 'hors_service'] }
+          });
+
+          if (problematicPneus.length === 0) {
+            await Trailer.findByIdAndUpdate(updated.trailer, { status: 'disponible' });
+            console.log(`✅ Trailer ${updated.trailer} remis disponible (tous les pneus OK)`);
+          }
+        }
+      }
+    }
+
+    return Maintenance.findByIdAndDelete(id);
   },
 
-  getMaintenancesDueForDate: async () => {
-    const maintenances = await Maintenance.find()
-      .populate("resource")
-      .populate("rule");
+  completeMaintenance: async (id) => {
+    const maintenance = await Maintenance.findById(id);
+    if (!maintenance) throw new Error("Maintenance non trouvée");
 
-    const today = new Date();
-    return maintenances.filter(m => {
-      if (!m.rule || !m.rule.intervalDays || !m.createdAt) return false;
-      const nextDate = new Date(m.createdAt);
-      nextDate.setDate(nextDate.getDate() + m.rule.intervalDays);
-      return today >= nextDate;
-    });
+    // Remettre le statut de la ressource à "disponible"
+    let Model;
+    if (maintenance.resourceType === "truck") Model = Truck;
+    else if (maintenance.resourceType === "trailer") Model = Trailer;
+    else if (maintenance.resourceType === "pneu") Model = Pneu;
+
+    if (Model) {
+      console.log(`✅ Maintenance ${id} terminée`);
+      const updated = await Model.findByIdAndUpdate(
+        maintenance.resource, 
+        { 
+          status: "disponible",
+          lastMaintenance: new Date()
+        },
+        { new: true }
+      );
+      console.log(`✅ Ressource ${maintenance.resource} statut: ${updated?.status}`);
+
+      // ✅ Si c'est un pneu, vérifier si on peut remettre le véhicule disponible
+      if (maintenance.resourceType === "pneu" && updated) {
+        if (updated.truck) {
+          const problematicPneus = await Pneu.find({
+            truck: updated.truck,
+            _id: { $ne: updated._id },
+            status: { $in: ['en_maintenance', 'hors_service'] }
+          });
+
+          if (problematicPneus.length === 0) {
+            await Truck.findByIdAndUpdate(updated.truck, { status: 'disponible' });
+            console.log(`✅ Truck ${updated.truck} remis disponible (tous les pneus OK)`);
+          } else {
+            console.log(`⚠️ Truck ${updated.truck} reste hors_service (${problematicPneus.length} pneus problématiques)`);
+          }
+        }
+
+        if (updated.trailer) {
+          const problematicPneus = await Pneu.find({
+            trailer: updated.trailer,
+            _id: { $ne: updated._id },
+            status: { $in: ['en_maintenance', 'hors_service'] }
+          });
+
+          if (problematicPneus.length === 0) {
+            await Trailer.findByIdAndUpdate(updated.trailer, { status: 'disponible' });
+            console.log(`✅ Trailer ${updated.trailer} remis disponible (tous les pneus OK)`);
+          } else {
+            console.log(`⚠️ Trailer ${updated.trailer} reste hors_service (${problematicPneus.length} pneus problématiques)`);
+          }
+        }
+      }
+    }
+
+    // Supprimer ou marquer comme terminée
+    return Maintenance.findByIdAndDelete(id);
   },
 
-  // Calculer prochain km ou date de maintenance pour un objet Maintenance
-  // calculateNextMaintenance: (maintenance) => {
-  //   let nextKm = null;
-  //   let nextDate = null;
-
-  //   if (maintenance.rule?.intervalKm && maintenance.kmAtMaintenance != null) {
-  //     nextKm = maintenance.kmAtMaintenance + maintenance.rule.intervalKm;
-  //   }
-
-  //   if (maintenance.rule?.intervalDays && maintenance.createdAt) {
-  //     nextDate = new Date(maintenance.createdAt);
-  //     nextDate.setDate(nextDate.getDate() + maintenance.rule.intervalDays);
-  //   }
-
-  //   return { nextKm, nextDate };
-  // }
-
- notifyDueVidanges: async () => {
+  notifyDueVidanges: async () => {
     console.log("🔍 Vérification des maintenances dues...");
     
     const maintenances = await Maintenance.find()
@@ -130,7 +229,6 @@ export const MaintenanceService = {
 
       console.log(`Action: ${m.rule.action}, Km actuel: ${m.resource.kilometrage}, KmMaintenance: ${m.kmAtMaintenance}, IntervalKm: ${m.rule.intervalKm}`);
 
-      // Calcul date et km de prochaine maintenance
       const nextKm = m.kmAtMaintenance + (m.rule.intervalKm || 0);
       const nextDate = new Date(m.createdAt);
       if (m.rule.intervalDays) nextDate.setDate(nextDate.getDate() + m.rule.intervalDays);
@@ -156,8 +254,7 @@ export const MaintenanceService = {
       }
     });
 
-    // Vérifier les trucks sans maintenance
-    console.log('\n Vérification des trucks sans maintenance...');
+    console.log('\n📌 Vérification des trucks sans maintenance...');
     const trucks = await Truck.find();
     console.log(`Total trucks trouvés: ${trucks.length}`);
 
@@ -170,7 +267,6 @@ export const MaintenanceService = {
       if (!hasMaintenance) {
         console.log(`⚠️ Truck ${truck.immatriculation} sans maintenance (${truck.kilometrage} km)`);
         
-        // Alerte si le truck a plus de 10000 km sans aucune maintenance
         if (truck.kilometrage >= 10000) {
           console.log(`ALERTE : Truck sans maintenance et >10000 km !`);
           
@@ -187,6 +283,6 @@ export const MaintenanceService = {
       }
     }
 
-    console.log(`\n ${notificationCount} maintenance(s) due(s) détectée(s)`);
+    console.log(`\n✅ ${notificationCount} maintenance(s) due(s) détectée(s)`);
   }
 };
