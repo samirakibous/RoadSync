@@ -15,11 +15,12 @@ router.patch("/:id", isAuthenticated, authorizeRoles("admin"), tripController.up
 
 router.get("/:id", isAuthenticated, authorizeRoles("admin"), tripController.getTripById);
 
-router.patch("/:id/start", isAuthenticated, authorizeRoles("admin"), tripController.startTrip);
+router.patch("/:id/start", isAuthenticated, authorizeRoles("admin", "driver"), tripController.startTrip);
 
-router.patch("/:id/end", isAuthenticated, authorizeRoles("admin"), tripController.endTrip);
+router.patch("/:id/end", isAuthenticated, authorizeRoles("admin", "driver"), tripController.endTrip);
 
-router.get("/my-trips", isAuthenticated, authorizeRoles("driver"), tripController.getTripByDriver);
+router.get("/driver/my-trips", isAuthenticated, authorizeRoles("driver"), tripController.getTripByDriver);
 
+router.get("/:id/download-pdf", isAuthenticated, authorizeRoles("admin", "driver"), tripController.downloadTripPDF);
 
 export default router;

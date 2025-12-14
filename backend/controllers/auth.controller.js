@@ -22,7 +22,12 @@ export const login = async (req, res) => {
             mustChangePassword: user.mustChangePassword,
             data: {
                 token,
-                user: { id: user._id, name: user.name, role: user.role }
+                user: { 
+                    id: user._id, 
+                    name: user.name, 
+                    role: user.role,
+                    mustChangePassword: user.mustChangePassword
+                }
             }
         });
     } catch (err) {
