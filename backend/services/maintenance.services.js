@@ -30,14 +30,32 @@ export const MaintenanceService = {
     return maintenance;
   },
 
-  findAll: () => Maintenance.find(),
-  // .populate("resource").populate("rule"),
+  findAll: () => Maintenance.find()
+    .populate({
+      path: 'resource',
+      select: 'immatriculation marque modele plateNumber type position'
+    })
+    .populate("rule", "type action")
+    .sort({ createdAt: -1 }),
 
-  findById: (id) => Maintenance.findById(id),
-  // .populate("resource").populate("rule"),
+  findById: (id) => Maintenance.findById(id)
+    .populate({
+      path: 'resource',
+      select: 'immatriculation marque modele plateNumber type position'
+    })
+    .populate("rule", "type action"),
 
-  update: (id, data) =>
-    Maintenance.findByIdAndUpdate(id, data, { new: true, runValidators: true }),
+  update: async (id, data) => {
+    const maintenance = await Maintenance.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    if (maintenance) {
+      await maintenance.populate({
+        path: 'resource',
+        select: 'immatriculation marque modele plateNumber type position'
+      });
+      await maintenance.populate("rule", "type action");
+    }
+    return maintenance;
+  },
 
   delete: (id) => Maintenance.findByIdAndDelete(id),
 
