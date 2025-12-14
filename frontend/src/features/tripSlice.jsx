@@ -24,6 +24,25 @@ export const fetchTrips = createAsyncThunk(
   }
 );
 
+export const fetchMyTrips = createAsyncThunk(
+  "trips/fetchMyTrips",
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth;
+      const res = await fetch("http://localhost:3000/api/trips/driver/my-trips", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("Erreur du chargement de mes trajets");
+      const data = await res.json();
+      return data.data || [];
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 /* FETCH BY ID */
 export const fetchTripById = createAsyncThunk(
   "trips/fetchTripById",
@@ -194,6 +213,19 @@ const tripSlice = createSlice({
         state.list = action.payload; 
       })
       .addCase(fetchTrips.rejected, (state, action) => { 
+        state.loading = false; 
+        state.error = action.payload; 
+      })
+
+      .addCase(fetchMyTrips.pending, (state) => { 
+        state.loading = true; 
+        state.error = null; 
+      })
+      .addCase(fetchMyTrips.fulfilled, (state, action) => { 
+        state.loading = false; 
+        state.list = action.payload; 
+      })
+      .addCase(fetchMyTrips.rejected, (state, action) => { 
         state.loading = false; 
         state.error = action.payload; 
       })

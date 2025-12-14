@@ -12,13 +12,13 @@ export default function TripModal({ trip, onClose, onSave }) {
   const { list: trailers } = useSelector(state => state.trailers);
   const { list: users } = useSelector(state => state.users);
   // Récupérer les enums depuis Redux
-  const { tripTypes, tripStatus } = useSelector(state => state.trips);
+  const {  tripTypes, tripStatus } = useSelector(state => state.trips);
 
   const [modalTrip, setModalTrip] = useState({
     lieuDepart: "",
     lieuArrivee: "",
     datDepart: "",
-    datArrivee: "",
+    dateArrivee: "",
     distance: 0,
     truck: "",
     trailer: "",
@@ -41,7 +41,7 @@ export default function TripModal({ trip, onClose, onSave }) {
         trailer: trip.trailer?._id || trip.trailer || "",
         driver: trip.driver?._id || trip.driver || "",
         datDepart: trip.datDepart ? new Date(trip.datDepart).toISOString().split('T')[0] : "",
-        datArrivee: trip.datArrivee ? new Date(trip.datArrivee).toISOString().split('T')[0] : "",
+        dateArrivee: trip.dateArrivee ? new Date(trip.dateArrivee).toISOString().split('T')[0] : "",
       });
     }
   }, [trip]);
@@ -52,7 +52,12 @@ export default function TripModal({ trip, onClose, onSave }) {
       return;
     }
 
-    onSave(modalTrip);
+    const dataToSave = {
+      ...modalTrip,
+      trailer: modalTrip.trailer || null,
+    };
+
+    onSave(dataToSave);
     onClose();
   };
 

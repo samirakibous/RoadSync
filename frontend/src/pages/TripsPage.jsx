@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchTrips, selectTrip, deleteTrip, updateTrip, createTrip } from "../features/tripSlice";
 import Sidebare from "../components/sidebare";
 import TripModal from "../components/TripModal";
-import { MapPin, Calendar, Truck as TruckIcon } from "lucide-react";
+import { MapPin, Calendar, Truck as TruckIcon, Gauge, FileText } from "lucide-react";
 
 export default function TripsPage() {
   const dispatch = useDispatch();
@@ -179,10 +179,10 @@ export default function TripsPage() {
                   <p className="text-xs text-gray-600">Date départ</p>
                   <p className="font-semibold">{new Date(selectedTrip.datDepart).toLocaleDateString()}</p>
                 </div>
-                {selectedTrip.datArrivee && (
+                {selectedTrip.dateArrivee && (
                   <div className="p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-600">Date arrivée</p>
-                    <p className="font-semibold">{new Date(selectedTrip.datArrivee).toLocaleDateString()}</p>
+                    <p className="font-semibold">{new Date(selectedTrip.dateArrivee).toLocaleDateString()}</p>
                   </div>
                 )}
               </div>
@@ -205,6 +205,86 @@ export default function TripsPage() {
                 <p><b>Type :</b> {selectedTrip.type}</p>
                 <p><b>Statut :</b> {getStatusBadge(selectedTrip.status)}</p>
               </div>
+
+              {/*  Section Kilométrage et Carburant */}
+              {(selectedTrip.kmDepart || selectedTrip.kmArrivee || selectedTrip.carburantDepart || selectedTrip.carburantArrivee) && (
+                <div className="border-t pt-3 mt-3">
+                  <h3 className="text-sm font-semibold text-[#2a6570] mb-3 flex items-center gap-2">
+                    <Gauge className="w-4 h-4" />
+                    Relevés du trajet
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedTrip.kmDepart && (
+                      <div className="p-2 bg-blue-50 rounded">
+                        <p className="text-xs text-gray-600">KM départ</p>
+                        <p className="font-bold text-blue-700">{selectedTrip.kmDepart} km</p>
+                      </div>
+                    )}
+                    {selectedTrip.kmArrivee && (
+                      <div className="p-2 bg-green-50 rounded">
+                        <p className="text-xs text-gray-600">KM arrivée</p>
+                        <p className="font-bold text-green-700">{selectedTrip.kmArrivee} km</p>
+                      </div>
+                    )}
+                    {selectedTrip.carburantDepart && (
+                      <div className="p-2 bg-yellow-50 rounded">
+                        <p className="text-xs text-gray-600">Carburant départ</p>
+                        <p className="font-bold text-yellow-700">{selectedTrip.carburantDepart} L</p>
+                      </div>
+                    )}
+                    {selectedTrip.carburantArrivee && (
+                      <div className="p-2 bg-orange-50 rounded">
+                        <p className="text-xs text-gray-600">Carburant arrivée</p>
+                        <p className="font-bold text-orange-700">{selectedTrip.carburantArrivee} L</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/*  Calculer et afficher la distance parcourue et consommation */}
+                  {selectedTrip.kmDepart && selectedTrip.kmArrivee && (
+                    <div className="mt-3 p-3 bg-purple-50 rounded-lg">
+                      <p className="text-sm font-semibold text-purple-800">
+                         Distance parcourue : {selectedTrip.kmArrivee - selectedTrip.kmDepart} km
+                      </p>
+                      {selectedTrip.carburantDepart && selectedTrip.carburantArrivee && (
+                        <p className="text-sm font-semibold text-purple-800 mt-1">
+                           Consommation : {selectedTrip.carburantDepart - selectedTrip.carburantArrivee} L
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/*  Afficher les remarques sur le véhicule */}
+              {selectedTrip.remarquesVehicule && (
+                <div className="border-t pt-3 mt-3">
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <FileText className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-yellow-800 mb-1">
+                          Remarques sur le véhicule :
+                        </p>
+                        <p className="text-sm text-yellow-700">
+                          {selectedTrip.remarquesVehicule}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes générales */}
+              {selectedTrip.notes && (
+                <div className="border-t pt-3 mt-3">
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-700 mb-1">Notes</p>
+                    <p className="text-sm text-gray-600">{selectedTrip.notes}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="text-xs text-gray-500 pt-3 border-t">
                 <p>Créé le : {new Date(selectedTrip.createdAt).toLocaleString()}</p>

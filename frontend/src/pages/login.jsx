@@ -29,9 +29,9 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      console.log("la reponse", response);
+      
       const data = await response.json();
-      console.log("la data", data);
+      
       if (!response.ok) {
         setError(data.message || "Erreur lors de la connexion");
         setLoading(false);
@@ -43,8 +43,13 @@ export default function Login() {
         token: data.data.token,
       }));
 
-      // Redirection si tu veux plus tard
-      navigate("/dashboard");
+      if (data.data.user.role === "driver" && data.data.user.mustChangePassword) {
+        navigate("/change-password");
+      } else if (data.data.user.role === "driver") {
+        navigate("/driver-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
 
       setLoading(false);
 
@@ -54,7 +59,7 @@ export default function Login() {
     }
   };
 
-  // Soumettre le formulaire avec Entrée
+ 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") handleSubmit();
   };
@@ -88,7 +93,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Section droite - Formulaire avec palette #3b8492 */}
+      {/* Formulaire */}
       <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-[#f0f9fa] to-white">
         <div className="w-full max-w-md">
           {/* Logo mobile */}
