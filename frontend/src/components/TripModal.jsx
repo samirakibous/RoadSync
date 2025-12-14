@@ -11,6 +11,8 @@ export default function TripModal({ trip, onClose, onSave }) {
   const { list: trucks } = useSelector(state => state.trucks);
   const { list: trailers } = useSelector(state => state.trailers);
   const { list: users } = useSelector(state => state.users);
+  // Récupérer les enums depuis Redux
+  const { tripTypes, tripStatus } = useSelector(state => state.trips);
 
   const [modalTrip, setModalTrip] = useState({
     lieuDepart: "",
@@ -56,6 +58,29 @@ export default function TripModal({ trip, onClose, onSave }) {
 
   // Filtrer uniquement les chauffeurs
   const drivers = users.filter(user => user.role === "driver");
+
+  //  Filtrer uniquement les trucks/trailers disponibles
+  const availableTrucks = trucks.filter(truck => truck.status === "disponible");
+  const availableTrailers = trailers.filter(trailer => trailer.status === "disponible");
+
+  //  Fonction pour afficher les labels en français
+  const getTypeLabel = (type) => {
+    const labels = {
+      livraison: "Livraison",
+      transport: "Transport",
+      autres: "Autres"
+    };
+    return labels[type] || type;
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      "a-faire": "À faire",
+      "en-cours": "En cours",
+      "termine": "Terminé"
+    };
+    return labels[status] || status;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -128,7 +153,7 @@ export default function TripModal({ trip, onClose, onSave }) {
             />
           </div>
 
-          {/* Type */}
+          {/* Type -  Utiliser tripTypes depuis Redux */}
           <div>
             <label className="block text-sm font-semibold text-[#2a6570] mb-2">Type de trajet</label>
             <select 
@@ -136,13 +161,15 @@ export default function TripModal({ trip, onClose, onSave }) {
               onChange={e => setModalTrip({...modalTrip, type: e.target.value})} 
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]"
             >
-              <option value="livraison">Livraison</option>
-              <option value="transport">Transport</option>
-              <option value="autres">Autres</option>
+              {tripTypes && tripTypes.map(type => (
+                <option key={type} value={type}>
+                  {getTypeLabel(type)}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Camion */}
+          {/* Camion -  Afficher uniquement les trucks disponibles */}
           <div>
             <label className="block text-sm font-semibold text-[#2a6570] mb-2">
               <TruckIcon className="inline w-4 h-4 mr-1" />
@@ -154,7 +181,7 @@ export default function TripModal({ trip, onClose, onSave }) {
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]"
             >
               <option value="">Sélectionner un camion</option>
-              {trucks.map(truck => (
+              {availableTrucks.map(truck => (
                 <option key={truck._id} value={truck._id}>
                   {truck.immatriculation} - {truck.marque} {truck.modele}
                 </option>
@@ -162,7 +189,7 @@ export default function TripModal({ trip, onClose, onSave }) {
             </select>
           </div>
 
-          {/* Remorque */}
+          {/* Remorque -  Afficher uniquement les trailers disponibles */}
           <div>
             <label className="block text-sm font-semibold text-[#2a6570] mb-2">
               Remorque (optionnel)
@@ -173,7 +200,7 @@ export default function TripModal({ trip, onClose, onSave }) {
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]"
             >
               <option value="">Aucune remorque</option>
-              {trailers.map(trailer => (
+              {availableTrailers.map(trailer => (
                 <option key={trailer._id} value={trailer._id}>
                   {trailer.plateNumber} - {trailer.type}
                 </option>
@@ -201,7 +228,7 @@ export default function TripModal({ trip, onClose, onSave }) {
             </select>
           </div>
 
-          {/* Statut */}
+          {/* Statut -  Utiliser tripStatus depuis Redux */}
           <div>
             <label className="block text-sm font-semibold text-[#2a6570] mb-2">Statut</label>
             <select 
@@ -209,9 +236,11 @@ export default function TripModal({ trip, onClose, onSave }) {
               onChange={e => setModalTrip({...modalTrip, status: e.target.value})} 
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]"
             >
-              <option value="a-faire">À faire</option>
-              <option value="en-cours">En cours</option>
-              <option value="termine">Terminé</option>
+              {tripStatus && tripStatus.map(status => (
+                <option key={status} value={status}>
+                  {getStatusLabel(status)}
+                </option>
+              ))}
             </select>
           </div>
         </div>
