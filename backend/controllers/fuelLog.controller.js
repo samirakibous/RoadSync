@@ -35,10 +35,44 @@ console.log("MONTANT:", montant, typeof montant);
 export const getAllFuelLogs = async (req, res) => {
   try {
     const fuelLogs = await FuelLog.find()
-      .populate("trip", "lieuDepart lieuArrivee datDepart status")
+      .populate({
+        path: 'trip',
+        select: 'lieuDepart lieuArrivee datDepart status',
+        populate: {
+          path: 'driver',
+          select: 'name email'
+        }
+      })
       .sort({ createdAt: -1 });
       
     res.status(200).json({ success: true, data: fuelLogs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Récupérer MES fuel logs (chauffeur connecté)
+export const getMyFuelLogs = async (req, res) => {
+  try {
+    const driverId = req.user.id;
+
+    // Trouver tous les fuel logs des trips du driver
+    const fuelLogs = await FuelLog.find()
+      .populate({
+        path: 'trip',
+        match: { driver: driverId }, // Filtrer par driver
+        select: 'lieuDepart lieuArrivee datDepart status driver',
+        populate: {
+          path: 'driver',
+          select: 'name email'
+        }
+      })
+      .sort({ createdAt: -1 });
+
+    // Filtrer les null (trips qui ne correspondent pas au driver)
+    const filteredLogs = fuelLogs.filter(log => log.trip !== null);
+
+    res.status(200).json({ success: true, data: filteredLogs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -48,7 +82,14 @@ export const getFuelLogByTrip = async (req, res) => {
   try {
     const { id } = req.params;
     const fuelLogs = await FuelLog.find({ trip: id })
-      .populate("trip", "lieuDepart lieuArrivee datDepart status");
+      .populate({
+        path: 'trip',
+        select: 'lieuDepart lieuArrivee datDepart status',
+        populate: {
+          path: 'driver',
+          select: 'name email'
+        }
+      });
       
     res.status(200).json({ success: true, data: fuelLogs });
   } catch (err) {

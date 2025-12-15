@@ -1,19 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTrips, selectTrip, deleteTrip, updateTrip, createTrip } from "../features/tripSlice";
-import Sidebare from "../components/sidebare";
+import { 
+  fetchTrips, 
+  deleteTrip, 
+  selectTrip, 
+  createTrip, 
+  updateTrip 
+} from "../features/tripSlice";
+import { fetchFuelLogsByTrip } from "../features/fuelLogSlice"; // ✅ Importer
+import Sidebare from "../components/Sidebare";
 import TripModal from "../components/TripModal";
-import { MapPin, Calendar, Truck as TruckIcon, Gauge, FileText } from "lucide-react";
+import { 
+  MapPin, 
+  Calendar, 
+  Truck as TruckIcon,
+  Gauge,
+  FileText,
+  DollarSign,
+  Receipt   
+} from "lucide-react";
 
 export default function TripsPage() {
   const dispatch = useDispatch();
   const { list, selectedTrip, loading, error } = useSelector(state => state.trips);
+  const { list: fuelLogs, loading: fuelLogsLoading } = useSelector(state => state.fuelLog); // ✅ Récupérer les fuel logs
   const [modalTrip, setModalTrip] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => { 
     dispatch(fetchTrips()); 
   }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedTrip?._id) {
+      dispatch(fetchFuelLogsByTrip(selectedTrip._id));
+    }
+  }, [selectedTrip, dispatch]);
 
   const handleSave = async (trip) => {
     setIsSubmitting(true);
@@ -23,9 +45,7 @@ export default function TripsPage() {
       } else {
         await dispatch(createTrip(trip)).unwrap();
       }
-      
       await dispatch(fetchTrips()).unwrap();
-      
       setModalTrip(null);
     } catch (err) {
       console.error("Erreur lors de l'enregistrement:", err);
@@ -60,7 +80,7 @@ export default function TripsPage() {
       "termine": "Terminé"
     };
     return (
-      <span className={`px-3 py-1 text-xs rounded-full font-semibold ${styles[status]}`}>
+      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${styles[status]}`}>
         {labels[status]}
       </span>
     );
@@ -160,7 +180,7 @@ export default function TripsPage() {
         ) : null}
       </div>
 
-      <div className="w-1/3 bg-white rounded-xl shadow p-4">
+      <div className="w-1/3 bg-white rounded-xl shadow p-4 overflow-auto">
         {selectedTrip ? (
           <>
             <h2 className="text-xl font-semibold text-[#2a6570] mb-4">Détails du trajet</h2>
@@ -206,7 +226,7 @@ export default function TripsPage() {
                 <p><b>Statut :</b> {getStatusBadge(selectedTrip.status)}</p>
               </div>
 
-              {/*  Section Kilométrage et Carburant */}
+              {/* Section Kilométrage et Carburant */}
               {(selectedTrip.kmDepart || selectedTrip.kmArrivee || selectedTrip.carburantDepart || selectedTrip.carburantArrivee) && (
                 <div className="border-t pt-3 mt-3">
                   <h3 className="text-sm font-semibold text-[#2a6570] mb-3 flex items-center gap-2">
@@ -241,15 +261,15 @@ export default function TripsPage() {
                     )}
                   </div>
 
-                  {/*  Calculer et afficher la distance parcourue et consommation */}
+                  {/* Calculs */}
                   {selectedTrip.kmDepart && selectedTrip.kmArrivee && (
                     <div className="mt-3 p-3 bg-purple-50 rounded-lg">
                       <p className="text-sm font-semibold text-purple-800">
-                         Distance parcourue : {selectedTrip.kmArrivee - selectedTrip.kmDepart} km
+                        📊 Distance parcourue : {selectedTrip.kmArrivee - selectedTrip.kmDepart} km
                       </p>
                       {selectedTrip.carburantDepart && selectedTrip.carburantArrivee && (
                         <p className="text-sm font-semibold text-purple-800 mt-1">
-                           Consommation : {selectedTrip.carburantDepart - selectedTrip.carburantArrivee} L
+                          ⛽ Consommation : {selectedTrip.carburantDepart - selectedTrip.carburantArrivee} L
                         </p>
                       )}
                     </div>
@@ -257,7 +277,73 @@ export default function TripsPage() {
                 </div>
               )}
 
-              {/*  Afficher les remarques sur le véhicule */}
+              {/* Section Fuel Logs */}
+              <div className="border-t pt-3 mt-3">
+                <h3 className="text-sm font-semibold text-[#2a6570] mb-3 flex items-center gap-2">
+                  <Receipt className="w-4 h-4" />
+                  Fuel Logs ({fuelLogs.length})
+                </h3>
+                
+                {fuelLogsLoading ? (
+                  <p className="text-sm text-gray-500">Chargement...</p>
+                ) : fuelLogs.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">Aucun fuel log pour ce trajet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {fuelLogs.map((log) => (
+                      <div key={log._id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <DollarSign className="w-4 h-4 text-green-600" />
+                              <p className="font-bold text-green-800">{log.montant} MAD</p>
+                            </div>
+                            <p className="text-xs text-gray-600">
+                              📅 {new Date(log.createdAt).toLocaleDateString('fr-FR')} à {new Date(log.createdAt).toLocaleTimeString('fr-FR')}
+                            </p>
+                            {log.factureUrl && (
+                              <div className="mt-2">
+                                {log.factureType === 'pdf' ? (
+                                  <a 
+                                    href={`http://localhost:3000${log.factureUrl}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                  >
+                                    📄 Voir le PDF
+                                  </a>
+                                ) : (
+                                  <a 
+                                    href={`http://localhost:3000${log.factureUrl}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img 
+                                      src={`http://localhost:3000${log.factureUrl}`} 
+                                      alt="Facture" 
+                                      className="w-full h-24 object-cover rounded border border-green-300 hover:opacity-80 transition"
+                                    />
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Total des fuel logs */}
+                    <div className="mt-3 p-3 bg-green-100 rounded-lg border-2 border-green-300">
+                      <p className="text-sm font-bold text-green-900 flex items-center gap-2">
+                        <DollarSign className="w-5 h-5" />
+                        Total carburant : {fuelLogs.reduce((sum, log) => sum + (log.montant || 0), 0).toFixed(2)} MAD
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Remarques sur le véhicule */}
               {selectedTrip.remarquesVehicule && (
                 <div className="border-t pt-3 mt-3">
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">

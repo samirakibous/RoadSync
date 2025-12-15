@@ -9,12 +9,23 @@ import {
   BarChart3,
   Fuel,
   Wrench,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { logout } from '../features/authSlice';
 
 
 export default function Sidebare() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/');
+  };
+
   const menuItems = [
     { icon: Fuel, label: 'FuelLog',path:'/fuel-logs' },
     { icon: Truck, label: 'truck', path: '/trucks' },
@@ -76,6 +87,16 @@ export default function Sidebare() {
           })}
         </nav>
 
+        {/* Bouton de déconnexion en bas */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 font-medium"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Déconnexion</span>
+          </button>
+        </div>
 
       </aside>
     </>

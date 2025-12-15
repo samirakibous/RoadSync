@@ -6,10 +6,11 @@ import * as fuelLogController from "../controllers/fuelLog.controller.js";
 
 const router = express.Router();
 
-router.post("/create", isAuthenticated, authorizeRoles("driver", "admin"), uploadFuelLog, fuelLogController.createFuelLog);
-router.delete("/:id", isAuthenticated, authorizeRoles("admin"), fuelLogController.deleteFuelLog);
+router.post("/", isAuthenticated, authorizeRoles("driver"), uploadFuelLog, fuelLogController.createFuelLog);
+router.get("/my-fuel-logs", isAuthenticated, authorizeRoles("driver"), fuelLogController.getMyFuelLogs);
 
 router.get("/", isAuthenticated, authorizeRoles("admin"), fuelLogController.getAllFuelLogs);
-router.get('/trip/:id', isAuthenticated, authorizeRoles("admin"), fuelLogController.getFuelLogByTrip);
+router.get("/trip/:id", isAuthenticated, authorizeRoles("admin"), fuelLogController.getFuelLogByTrip);
+router.delete("/:id", isAuthenticated, authorizeRoles("admin"), fuelLogController.deleteFuelLog);
 
 export default router;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyTrips, startTrip, endTrip } from "../features/tripSlice";
+import { logout } from "../features/authSlice";
 import { 
   MapPin, 
   Calendar, 
@@ -12,7 +13,10 @@ import {
   Fuel,
   Gauge,
   Download,
-  FileText  
+  FileText,
+  DollarSign,
+  Upload,
+  LogOut
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
@@ -24,10 +28,12 @@ export default function DriverDashboard() {
 
   const [showStartModal, setShowStartModal] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [showFuelModal, setShowFuelModal] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   
   const [startData, setStartData] = useState({ carburantDepart: "", remarquesVehicule: "" });
   const [endData, setEndData] = useState({ kmArrivee: "", carburantArrivee: "", remarquesVehicule: "" });
+  const [fuelData, setFuelData] = useState({ montant: "", facture: null });
 
   useEffect(() => {
     dispatch(fetchMyTrips());
@@ -40,6 +46,11 @@ export default function DriverDashboard() {
   }, [user, navigate]);
 
   const myTrips = trips;
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/');
+  };
 
   const handleStartTrip = (trip) => {
     setSelectedTrip(trip);
@@ -86,6 +97,51 @@ export default function DriverDashboard() {
     }));
     setShowEndModal(false);
     setEndData({ kmArrivee: "", carburantArrivee: "", remarquesVehicule: "" });
+  };
+
+  const handleAddFuel = (trip) => {
+    setSelectedTrip(trip);
+    setFuelData({ montant: "", facture: null });
+    setShowFuelModal(true);
+  };
+
+  const confirmAddFuel = async () => {
+    if (!fuelData.montant) {
+      alert("Veuillez saisir le montant");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("trip", selectedTrip._id);
+      formData.append("montant", fuelData.montant);
+      
+      if (fuelData.facture) {
+        formData.append("facture", fuelData.facture);
+      }
+
+      const response = await fetch("http://localhost:3000/api/fuelLog", {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de l'ajout");
+      }
+
+      alert("✅ Fuel log ajouté avec succès !");
+      setShowFuelModal(false);
+      setFuelData({ montant: "", facture: null });
+      
+      // Recharger les trips pour voir les fuel logs mis à jour
+      dispatch(fetchMyTrips());
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
   };
 
   const downloadPDF = async (tripId) => {
@@ -144,12 +200,25 @@ export default function DriverDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-[#2a6570] mb-2">
-            Mes Trajets
-          </h1>
-          <p className="text-gray-600">
-            Bonjour <span className="font-semibold">{user?.name}</span>, voici vos trajets assignés
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-[#2a6570] mb-2">
+                Mes Trajets
+              </h1>
+              <p className="text-gray-600">
+                Bonjour <span className="font-semibold">{user?.name}</span>, voici vos trajets assignés
+              </p>
+            </div>
+            
+            {/* Bouton de déconnexion */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -208,29 +277,23 @@ export default function DriverDashboard() {
                         {getStatusBadge(trip.status)}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-5 h-5 text-[#3b8492]" />
-                          <span>Type: <span className="font-semibold">{trip.type}</span></span>
+                          <Calendar className="w-4 h-4" />
+                          <span>Départ : {new Date(trip.datDepart).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-5 h-5 text-[#3b8492]" />
-                          <span>Départ: <span className="font-semibold">
-                            {new Date(trip.datDepart).toLocaleDateString('fr-FR')}
-                          </span></span>
+                          <Calendar className="w-4 h-4" />
+                          <span>Arrivée : {new Date(trip.dateArrivee).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <TruckIcon className="w-5 h-5 text-[#3b8492]" />
-                          <span>Camion: <span className="font-semibold">
-                            {trip.truck?.immatriculation}
-                          </span></span>
+                          <TruckIcon className="w-4 h-4" />
+                          <span>Camion : {trip.truck?.immatriculation}</span>
                         </div>
                         {trip.trailer && (
                           <div className="flex items-center gap-2">
-                            <TruckIcon className="w-5 h-5 text-[#3b8492]" />
-                            <span>Remorque: <span className="font-semibold">
-                              {trip.trailer?.plateNumber}
-                            </span></span>
+                            <TruckIcon className="w-4 h-4" />
+                            <span>Remorque : {trip.trailer?.plateNumber}</span>
                           </div>
                         )}
                       </div>
@@ -238,7 +301,17 @@ export default function DriverDashboard() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-2 ml-4 flex-col">
-                      {/*  Bouton télécharger PDF */}
+                      {/* ✅ Bouton ajouter carburant - UNIQUEMENT si en-cours */}
+                      {trip.status === "en-cours" && (
+                        <button
+                          onClick={() => handleAddFuel(trip)}
+                          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold flex items-center gap-2 transition"
+                        >
+                          <DollarSign className="w-5 h-5" />
+                          Ajouter carburant
+                        </button>
+                      )}
+
                       <button
                         onClick={() => downloadPDF(trip._id)}
                         className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold flex items-center gap-2 transition"
@@ -268,7 +341,7 @@ export default function DriverDashboard() {
                     </div>
                   </div>
 
-                  {/*  Afficher les remarques si présentes */}
+                  {/* Remarques */}
                   {trip.remarquesVehicule && (
                     <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <div className="flex items-start gap-2">
@@ -293,7 +366,7 @@ export default function DriverDashboard() {
                       {trip.carburantDepart && (
                         <div className="flex items-center gap-2">
                           <Fuel className="w-4 h-4 text-gray-500" />
-                          <span>Carburant départ: <strong>{trip.carburantDepart}L</strong></span>
+                          <span>Carburant départ: <strong>{trip.carburantDepart} L</strong></span>
                         </div>
                       )}
                       {trip.kmArrivee && (
@@ -305,7 +378,7 @@ export default function DriverDashboard() {
                       {trip.carburantArrivee && (
                         <div className="flex items-center gap-2">
                           <Fuel className="w-4 h-4 text-gray-500" />
-                          <span>Carburant arrivée: <strong>{trip.carburantArrivee}L</strong></span>
+                          <span>Carburant arrivée: <strong>{trip.carburantArrivee} L</strong></span>
                         </div>
                       )}
                     </div>
@@ -328,7 +401,7 @@ export default function DriverDashboard() {
               </p>
             </div>
             <div className="p-6 space-y-4">
-              {/*  Afficher le kilométrage du camion (lecture seule) */}
+              {/* Afficher le kilométrage du camion (lecture seule) */}
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Gauge className="w-5 h-5 text-blue-600" />
@@ -426,7 +499,7 @@ export default function DriverDashboard() {
                   placeholder="Ex: 50"
                 />
               </div>
-              {/*  Champ remarques */}
+              {/* Champ remarques */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   <FileText className="inline w-4 h-4 mr-1" />
@@ -453,6 +526,70 @@ export default function DriverDashboard() {
                 className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition"
               >
                 Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/*Fuel Modal */}
+      {showFuelModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5">
+              <h2 className="text-xl font-bold text-white">Ajouter un fuel log</h2>
+              <p className="text-orange-100 text-sm mt-1">
+                Trajet: {selectedTrip?.lieuDepart} → {selectedTrip?.lieuArrivee}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <DollarSign className="inline w-4 h-4 mr-1" />
+                  Montant (MAD) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={fuelData.montant}
+                  onChange={e => setFuelData({...fuelData, montant: e.target.value})}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  placeholder="Ex: 500.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <Upload className="inline w-4 h-4 mr-1" />
+                  Facture (Image ou PDF)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={e => setFuelData({...fuelData, facture: e.target.files[0]})}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                />
+                {fuelData.facture && (
+                  <p className="text-sm text-gray-600 mt-2 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    Fichier sélectionné: <strong>{fuelData.facture.name}</strong>
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setShowFuelModal(false)}
+                className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmAddFuel}
+                className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
+              >
+                Ajouter le log
               </button>
             </div>
           </div>
