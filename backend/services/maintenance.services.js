@@ -207,6 +207,7 @@ export const MaintenanceService = {
       .populate("resource")
       .populate("rule");
 
+      console.log("maintenances sammm" ,maintenances);
     console.log(`Total maintenances trouvées: ${maintenances.length}`);
 
     const today = new Date();

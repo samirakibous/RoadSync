@@ -2,10 +2,12 @@ import * as tripController from "../controllers/Trip.controller.js";
 import express from "express";
 import { isAuthenticated } from "../middleware/isAuthenticated.middleware.js";
 import { authorizeRoles } from "../middleware/authorisedRole.middleware.js";
+import { createTripSchema, updateTripSchema } from "../validations/Trip.js";
+import { validate } from "../middleware/validate.middleware.js";
 
 const router = express.Router();
 
-router.post("/", isAuthenticated, authorizeRoles("admin"), tripController.createTrip);
+router.post("/", isAuthenticated, authorizeRoles("admin"),  validate(createTripSchema), tripController.createTrip);
 
 router.get("/", isAuthenticated, authorizeRoles("admin"), tripController.getAllTrips);
 
@@ -15,7 +17,7 @@ router.patch("/:id", isAuthenticated, authorizeRoles("admin"), tripController.up
 
 router.get("/:id", isAuthenticated, authorizeRoles("admin"), tripController.getTripById);
 
-router.patch("/:id/start", isAuthenticated, authorizeRoles("admin", "driver"), tripController.startTrip);
+router.patch("/:id/start", isAuthenticated, authorizeRoles("admin", "driver"), validate(updateTripSchema), tripController.startTrip);
 
 router.patch("/:id/end", isAuthenticated, authorizeRoles("admin", "driver"), tripController.endTrip);
 
