@@ -44,8 +44,25 @@ export const markAsRead = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Notification marquée comme lue",
       data: notification
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const markAllAsRead = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    await Notification.updateMany(
+      { user: userId, read: false },
+      { read: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Toutes les notifications ont été marquées comme lues"
     });
   } catch (err) {
     next(err);

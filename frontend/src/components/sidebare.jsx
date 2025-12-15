@@ -1,17 +1,19 @@
 import React from 'react';
-import {
-  Truck,
-  Home,
-  Package,
-  Users,
-  MapPin,
-  Settings,
-  BarChart3,
-  Fuel,
+import { 
+  Truck, 
+  Users, 
+  MapPin, 
+  Settings, 
+  LogOut, 
   Wrench,
+  Fuel,
+  Bell, 
   X,
-  LogOut
-} from 'lucide-react';
+  BarChart3,
+  Package,
+  CircleGauge
+} from "lucide-react";
+import NotificationBell from "./NotificationBell"; 
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { logout } from '../features/authSlice';
@@ -53,8 +55,8 @@ export default function Sidebare() {
             </div>
             <span className="text-xl font-bold text-[#2a6570]">SyncRoad</span>
           </div>
+          <NotificationBell />
         </div>
-
         {/* Navigation */}
         <nav className="p-4 space-y-1">
           {menuItems.map((item, index) => {
@@ -86,17 +88,6 @@ export default function Sidebare() {
             }
           })}
         </nav>
-
-        {/* Bouton de déconnexion en bas */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 font-medium"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Déconnexion</span>
-          </button>
-        </div>
 
       </aside>
     </>

@@ -8,6 +8,7 @@ import fuelLogReducer from "../features/fuelLogSlice";
 import tripReducer from "../features/tripSlice";
 import maintenanceRuleReducer from "../features/maintenanceRuleSlice";
 import maintenanceReducer from "../features/maintenanceSlice";
+import notificationReducer from "../features/notificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +21,6 @@ export const store = configureStore({
     trips: tripReducer, 
     maintenanceRules: maintenanceRuleReducer,
     maintenances: maintenanceReducer,
+    notifications: notificationReducer, 
   },
 });
