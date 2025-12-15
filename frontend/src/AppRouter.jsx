@@ -11,13 +11,15 @@ import TripsPage from "./pages/TripsPage";
 import MaintenanceRulesPage from "./pages/MaintenanceRulesPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
-// ...existing code...
+import ProtectedRoute from "./components/ProtectedRoute.jsx"
 
 function AppRouter() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
+
+        <Route element={<ProtectedRoute />}>
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/driver-dashboard" element={<DriverDashboard />} />
@@ -29,6 +31,7 @@ function AppRouter() {
         <Route path="/trips" element={<TripsPage />} />
         <Route path="/maintenance-rules" element={<MaintenanceRulesPage />} />
         <Route path="/maintenance" element={<MaintenancePage />} />
+        </Route>
       </Routes>
     </Router>
   );
