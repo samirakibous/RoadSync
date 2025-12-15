@@ -18,6 +18,12 @@ const maintenanceSchema = new mongoose.Schema({
   notes: { type: String },
   
   kmAtMaintenance: { type: Number, min: 0 },
+    status: {
+    type: String,
+    enum: ['pending', 'completed'],
+    default: 'pending'
+  },
+  completedAt: { type: Date },
 }, {
   timestamps: true
 });
