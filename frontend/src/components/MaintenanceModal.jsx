@@ -21,7 +21,6 @@ export default function MaintenanceModal({ maintenance, onClose, onSave }) {
     pneu: "",
     rule: "",
     notes: "",
-    kmAtMaintenance: 0,
   });
 
   useEffect(() => {
@@ -41,7 +40,6 @@ export default function MaintenanceModal({ maintenance, onClose, onSave }) {
         trailer: maintenance.resourceType === "trailer" ? resourceId : "",
         pneu: maintenance.resourceType === "pneu" ? resourceId : "",
         rule: maintenance.rule?._id || maintenance.rule || "",
-        kmAtMaintenance: maintenance.kmAtMaintenance || 0,
       });
     }
   }, [maintenance]);
@@ -77,16 +75,14 @@ export default function MaintenanceModal({ maintenance, onClose, onSave }) {
       resource: resource,
       rule: modalMaintenance.rule,
       notes: modalMaintenance.notes || "",
-      kmAtMaintenance: modalMaintenance.kmAtMaintenance || 0,
     };
-
     if (modalMaintenance._id) {
       dataToSave._id = modalMaintenance._id;
     }
 
     onSave(dataToSave);
     onClose();
-  }; // ✅ Ajout de l'accolade fermante manquante
+  };
 
   const handleResourceTypeChange = (type) => {
     setModalMaintenance({
@@ -242,21 +238,6 @@ export default function MaintenanceModal({ maintenance, onClose, onSave }) {
               )}
             </div>
           )}
-
-          {/* Kilométrage au moment de la maintenance */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-[#2a6570] mb-2">
-              Kilométrage au moment de la maintenance
-            </label>
-            <input 
-              type="number" 
-              min="0"
-              value={modalMaintenance.kmAtMaintenance} 
-              onChange={e => setModalMaintenance({...modalMaintenance, kmAtMaintenance: parseInt(e.target.value) || 0})} 
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#3b8492]" 
-              placeholder="0"
-            />
-          </div>
 
           {/* Notes */}
           <div className="md:col-span-2">

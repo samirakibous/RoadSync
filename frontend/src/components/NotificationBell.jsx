@@ -45,7 +45,7 @@ export default function NotificationBell() {
 
       {/* Notification Panel */}
       {showPanel && (
-        <div className="absolute right-0 top-12 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="absolute right-0 md:right-auto md:left-1/2 md:-translate-x-1/2 top-12 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[80vh] overflow-hidden flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-[#3b8492] to-[#2a6570]">
             <div className="flex items-center gap-2">
@@ -100,20 +100,20 @@ export default function NotificationBell() {
                   onClick={() => !notif.read && handleMarkAsRead(notif._id)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-full ${notif.read ? 'bg-gray-200' : 'bg-orange-100'}`}>
+                    <div className={`p-2 rounded-full flex-shrink-0 ${notif.read ? 'bg-gray-200' : 'bg-orange-100'}`}>
                       <AlertCircle className={`w-5 h-5 ${notif.read ? 'text-gray-500' : 'text-orange-600'}`} />
                     </div>
-                    <div className="flex-1">
-                      <p className={`text-sm ${notif.read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm break-words ${notif.read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>
                         {notif.message}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(notif.createdAt).toLocaleDateString('fr-FR')} à{' '}
-                        {new Date(notif.createdAt).toLocaleTimeString('fr-FR')}
+                        {new Date(notif.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                     {!notif.read && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
                     )}
                   </div>
                 </div>
