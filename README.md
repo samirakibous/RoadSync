@@ -2,9 +2,6 @@
 
 Application web complète de gestion de flotte de camions construite avec la stack MERN (MongoDB, Express, React, Node.js). Solution professionnelle pour le suivi des trajets, la gestion du carburant, le monitoring du kilométrage et la maintenance préventive automatisée.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
-![React](https://img.shields.io/badge/react-18.3.1-blue.svg)
 
 ## 📋 Table des matières
 
@@ -236,7 +233,7 @@ RoadSync/
 
 1. **Cloner le repository**
 ```bash
-git clone https://github.com/votre-username/RoadSync.git
+git clone https://github.com/samirakibous/RoadSync.git
 cd RoadSync
 ```
 
@@ -504,7 +501,7 @@ Une fois démarrés :
 
 ## 👥 Contributeurs
 
-- **Votre Nom** - Développeur principal
+- **samira kibous** - Développeur principal
 
 ## 📝 License
 
@@ -521,5 +518,3 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 ---
 
 **RoadSync** - Simplifiez la gestion de votre flotte de transport 🚚
-
-Pour toute question ou support : [votre.email@example.com](mailto:votre.email@example.com)
