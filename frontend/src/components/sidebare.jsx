@@ -58,35 +58,48 @@ export default function Sidebare() {
           <NotificationBell />
         </div>
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item, index) => {
-            if (item.path) {
-              return (
-                <NavLink
-                  key={index}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? 'bg-[#3b8492] text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'
-                    }`
-                  }
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </NavLink>
-              );
-            } else {
-              return (
-                <div
-                  key={index}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${item.active ? 'bg-[#3b8492] text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </div>
-              );
-            }
-          })}
+        <nav className="p-4 space-y-1 flex flex-col h-[calc(100vh-4rem)]">
+          <div className="flex-1 space-y-1">
+            {menuItems.map((item, index) => {
+              if (item.path) {
+                return (
+                  <NavLink
+                    key={index}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? 'bg-[#3b8492] text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </NavLink>
+                );
+              } else {
+                return (
+                  <div
+                    key={index}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${item.active ? 'bg-[#3b8492] text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </div>
+                );
+              }
+            })}
+          </div>
+
+          {/* Bouton Déconnexion */}
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 font-medium"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
         </nav>
 
       </aside>
