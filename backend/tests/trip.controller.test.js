@@ -6,7 +6,8 @@ import {
   deleteTrip,
   startTrip,
   endTrip,
-  getTripByDriver
+  getTripByDriver,
+  downloadTripPDF
 } from "../controllers/trip.controller.js";
 
 import Trip from "../models/Trip.model.js";
@@ -21,6 +22,19 @@ jest.mock("../models/Truck.model.js");
 jest.mock("../models/Trailer.model.js");
 jest.mock("../models/User.model.js");
 jest.mock("../models/Pneu.model.js");
+
+// Mock PDFDocument
+const mockDoc = {
+  fontSize: jest.fn().mockReturnThis(),
+  text: jest.fn().mockReturnThis(),
+  moveDown: jest.fn().mockReturnThis(),
+  pipe: jest.fn(),
+  end: jest.fn()
+};
+
+jest.mock("pdfkit", () => {
+  return jest.fn(() => mockDoc);
+});
 
 // ================== SETUP ==================
 describe("Trip Controller - Tests unitaires", () => {
@@ -299,6 +313,219 @@ describe("Trip Controller - Tests unitaires", () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({ success: true })
       );
+    });
+  });
+
+  // ======================================================
+  // DOWNLOAD TRIP PDF
+  // ======================================================
+  describe("downloadTripPDF", () => {
+    it("devrait générer un PDF pour un trajet complet (admin)", async () => {
+      req.params.id = "trip1";
+      req.user.role = "admin";
+
+      const mockTrip = {
+        _id: "trip1",
+        lieuDepart: "Paris",
+        lieuArrivee: "Lyon",
+        datDepart: new Date("2024-01-01"),
+        dateArrivee: new Date("2024-01-02"),
+        type: "livraison",
+        status: "termine",
+        driver: { _id: "driver1", name: "John Doe", email: "john@test.com" },
+        truck: { immatriculation: "AB-123-CD", marque: "Renault", modele: "Premium" },
+        trailer: { plateNumber: "XY-456-ZT", type: "frigorifique" },
+        kmDepart: 10000,
+        kmArrivee: 10500,
+        carburantDepart: 100,
+        carburantArrivee: 50,
+        remarquesVehicule: "RAS",
+        notes: "Livraison OK"
+      };
+
+      const populateMock3 = jest.fn().mockResolvedValue(mockTrip);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(Trip.findById).toHaveBeenCalledWith("trip1");
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Content-Disposition",
+        expect.stringContaining("ordre-mission-trip1.pdf")
+      );
+    });
+
+    it("devrait générer un PDF sans trailer", async () => {
+      req.params.id = "trip1";
+      req.user.role = "admin";
+
+      const mockTrip = {
+        _id: "trip1",
+        lieuDepart: "Paris",
+        lieuArrivee: "Lyon",
+        datDepart: new Date("2024-01-01"),
+        dateArrivee: new Date("2024-01-02"),
+        type: "livraison",
+        status: "termine",
+        driver: { _id: "driver1", name: "John Doe", email: "john@test.com" },
+        truck: { immatriculation: "AB-123-CD", marque: "Renault", modele: "Premium" },
+        trailer: null,
+        kmDepart: 10000,
+        kmArrivee: 10500
+      };
+
+      const populateMock3 = jest.fn().mockResolvedValue(mockTrip);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
+    });
+
+    it("devrait générer un PDF sans relevés", async () => {
+      req.params.id = "trip1";
+      req.user.role = "admin";
+
+      const mockTrip = {
+        _id: "trip1",
+        lieuDepart: "Paris",
+        lieuArrivee: "Lyon",
+        datDepart: new Date("2024-01-01"),
+        dateArrivee: new Date("2024-01-02"),
+        type: "livraison",
+        status: "a-faire",
+        driver: { _id: "driver1", name: "John Doe", email: "john@test.com" },
+        truck: { immatriculation: "AB-123-CD", marque: "Renault", modele: "Premium" },
+        trailer: null
+      };
+
+      const populateMock3 = jest.fn().mockResolvedValue(mockTrip);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
+    });
+
+    it("devrait générer un PDF sans remarques ni notes", async () => {
+      req.params.id = "trip1";
+      req.user.role = "admin";
+
+      const mockTrip = {
+        _id: "trip1",
+        lieuDepart: "Paris",
+        lieuArrivee: "Lyon",
+        datDepart: new Date("2024-01-01"),
+        dateArrivee: new Date("2024-01-02"),
+        type: "livraison",
+        status: "termine",
+        driver: { _id: "driver1", name: "John Doe", email: "john@test.com" },
+        truck: { immatriculation: "AB-123-CD", marque: "Renault", modele: "Premium" },
+        trailer: null,
+        kmDepart: 10000
+      };
+
+      const populateMock3 = jest.fn().mockResolvedValue(mockTrip);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
+    });
+
+    it("devrait permettre à un chauffeur d'accéder à son propre PDF", async () => {
+      req.params.id = "trip1";
+      req.user.role = "driver";
+      req.user.id = "driver1";
+
+      const mockTrip = {
+        _id: "trip1",
+        lieuDepart: "Paris",
+        lieuArrivee: "Lyon",
+        datDepart: new Date("2024-01-01"),
+        dateArrivee: new Date("2024-01-02"),
+        type: "livraison",
+        status: "termine",
+        driver: { _id: "driver1", name: "John Doe", email: "john@test.com" },
+        truck: { immatriculation: "AB-123-CD", marque: "Renault", modele: "Premium" },
+        trailer: null
+      };
+
+      const populateMock3 = jest.fn().mockResolvedValue(mockTrip);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
+    });
+
+    it("devrait renvoyer 404 si le trajet n'existe pas", async () => {
+      req.params.id = "trip999";
+      req.user.role = "admin";
+
+      const populateMock3 = jest.fn().mockResolvedValue(null);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Trajet non trouvé"
+      });
+    });
+
+    it("devrait renvoyer 403 si un chauffeur essaie d'accéder au PDF d'un autre chauffeur", async () => {
+      req.params.id = "trip1";
+      req.user.role = "driver";
+      req.user.id = "driver2";
+
+      const mockTrip = {
+        _id: "trip1",
+        driver: { _id: "driver1", name: "John Doe" },
+        lieuDepart: "Paris",
+        lieuArrivee: "Lyon"
+      };
+
+      const populateMock3 = jest.fn().mockResolvedValue(mockTrip);
+      const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
+      const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
+      Trip.findById.mockReturnValue({ populate: populateMock1 });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Accès non autorisé"
+      });
+    });
+
+    it("devrait appeler next en cas d'erreur", async () => {
+      req.params.id = "trip1";
+      req.user.role = "admin";
+
+      const error = new Error("DB Error");
+      Trip.findById.mockImplementation(() => {
+        throw error;
+      });
+
+      await downloadTripPDF(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
     });
   });
 });
