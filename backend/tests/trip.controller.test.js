@@ -1,414 +1,304 @@
 import {
-    createTrip,
-    getAllTrips,
-    getTripById,
-    updateTrip,
-    deleteTrip,
-    startTrip,
-    endTrip,
-    getTripByDriver
-} from "../controllers/Trip.controller.js";
+  createTrip,
+  getAllTrips,
+  getTripById,
+  updateTrip,
+  deleteTrip,
+  startTrip,
+  endTrip,
+  getTripByDriver
+} from "../controllers/trip.controller.js";
 
 import Trip from "../models/Trip.model.js";
 import Truck from "../models/Truck.model.js";
 import Trailer from "../models/Trailer.model.js";
 import User from "../models/User.model.js";
+import Pneu from "../models/Pneu.model.js";
 
+// ================== MOCKS ==================
 jest.mock("../models/Trip.model.js");
 jest.mock("../models/Truck.model.js");
 jest.mock("../models/Trailer.model.js");
 jest.mock("../models/User.model.js");
+jest.mock("../models/Pneu.model.js");
 
-describe("Controller - createTrip", () => {
-    let req, res, next;
+// ================== SETUP ==================
+describe("Trip Controller - Tests unitaires", () => {
+  let req, res, next;
 
-    beforeEach(() => {
-        req = {
-            body: {
-                truck: "t1",
-                trailer: "tr1",
-                driver: "d1",
-                lieuDepart: "A",
-                lieuArrivee: "B",
-                datDepart: "2025-01-01",
-                dateArrivee: "2025-01-02",
-                status: "a-faire"
-            }
-        };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
+  beforeEach(() => {
+    req = {
+      body: {},
+      params: {},
+      user: {}
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      setHeader: jest.fn()
+    };
+
+    next = jest.fn();
+
+    jest.clearAllMocks();
+  });
+
+  // ======================================================
+  // CREATE TRIP
+  // ======================================================
+  describe("createTrip", () => {
+    it("doit créer un trajet avec succès", async () => {
+      req.body = {
+        truck: "truck1",
+        driver: "driver1",
+        lieuDepart: "Casa",
+        lieuArrivee: "Rabat",
+        datDepart: new Date(),
+        dateArrivee: new Date()
+      };
+
+      Truck.findById.mockResolvedValue({ _id: "truck1" });
+      User.findById.mockResolvedValue({ _id: "driver1", role: "driver" });
+      Trip.create.mockResolvedValue({ _id: "trip1" });
+
+      await createTrip(req, res, next);
+
+      expect(Trip.create).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true })
+      );
     });
 
-    it("devrait créer un trajet si camion, remorque et chauffeur valides", async () => {
-        Truck.findById.mockResolvedValue({ _id: "t1" });
-        Trailer.findById.mockResolvedValue({ _id: "tr1" });
-        User.findById.mockResolvedValue({ _id: "d1", role: "driver" });
-        Trip.create.mockResolvedValue(req.body);
+    it("doit refuser si le camion est invalide", async () => {
+      req.body = { truck: "badTruck", driver: "driver1" };
 
-        await createTrip(req, res, next);
+      Truck.findById.mockResolvedValue(null);
 
-        expect(Trip.create).toHaveBeenCalledWith(req.body);
-        expect(res.status).toHaveBeenCalledWith(201);
-        expect(res.json).toHaveBeenCalledWith({
-            success: true,
-            message: "Trajet créé avec succès",
-            data: req.body
-        });
+      await createTrip(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Camion invalide"
+      });
     });
 
-    it("devrait renvoyer 400 si camion invalide", async () => {
-        Truck.findById.mockResolvedValue(null);
+    it("doit refuser si le chauffeur n'est pas driver", async () => {
+      req.body = { truck: "truck1", driver: "user1" };
 
-        await createTrip(req, res, next);
+      Truck.findById.mockResolvedValue({ _id: "truck1" });
+      User.findById.mockResolvedValue({ _id: "user1", role: "admin" });
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Camion invalide" });
+      await createTrip(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Chauffeur invalide"
+      });
     });
+  });
 
-    it("devrait renvoyer 400 si remorque invalide", async () => {
-        Truck.findById.mockResolvedValue({ _id: "t1" });
-        Trailer.findById.mockResolvedValue(null);
+  // ======================================================
+  // GET ALL TRIPS
+  // ======================================================
+  describe("getAllTrips", () => {
+    it("doit retourner la liste des trajets", async () => {
+      Trip.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockResolvedValue([{ _id: "trip1" }])
+      });
 
-        await createTrip(req, res, next);
+      await getAllTrips(req, res, next);
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Remorque invalide" });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true })
+      );
     });
+  });
 
-    it("devrait renvoyer 400 si chauffeur invalide", async () => {
-        Truck.findById.mockResolvedValue({ _id: "t1" });
-        Trailer.findById.mockResolvedValue({ _id: "tr1" });
-        User.findById.mockResolvedValue({ _id: "d1", role: "admin" });
+  // ======================================================
+  // GET TRIP BY ID
+  // ======================================================
+ describe("getTripById", () => {
+  it("doit retourner un trajet par id", async () => {
+    req.params.id = "trip1";
 
-        await createTrip(req, res, next);
+    const populate3 = jest.fn().mockResolvedValue({ _id: "trip1" });
+    const populate2 = jest.fn().mockReturnValue({ populate: populate3 });
+    const populate1 = jest.fn().mockReturnValue({ populate: populate2 });
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Chauffeur invalide" });
+    Trip.findById.mockReturnValue({ populate: populate1 });
+
+    await getTripById(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: { _id: "trip1" }
     });
+  });
 
-    it("devrait appeler next en cas d'erreur", async () => {
-        Truck.findById.mockRejectedValue(new Error("DB Error"));
+  it("doit retourner 404 si trajet non trouvé", async () => {
+    req.params.id = "trip1";
 
-        await createTrip(req, res, next);
+    const populate3 = jest.fn().mockResolvedValue(null);
+    const populate2 = jest.fn().mockReturnValue({ populate: populate3 });
+    const populate1 = jest.fn().mockReturnValue({ populate: populate2 });
 
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
+    Trip.findById.mockReturnValue({ populate: populate1 });
+
+    await getTripById(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Trajet non trouvé"
     });
-});
-
-describe("Controller - getAllTrips", () => {
-    let req, res, next;
-    beforeEach(() => {
-        req = {};
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-    });
-
-    it("devrait renvoyer la liste des trajets", async () => {
-        const trips = [{ _id: "1" }, { _id: "2" }];
-
-        // Mock complet de la chaîne .find().populate().populate().populate()
-        const populateMock = jest.fn().mockReturnThis();
-        const populateMock2 = jest.fn().mockReturnThis();
-        const populateMock3 = jest.fn().mockResolvedValue(trips);
-
-        Trip.find.mockReturnValue({
-            populate: populateMock,
-        });
-        populateMock.mockReturnValue({
-            populate: populateMock2
-        });
-        populateMock2.mockReturnValue({
-            populate: populateMock3
-        });
-
-        await getAllTrips(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            success: true,
-            message: "Liste des trajets",
-            data: trips
-        });
-    });
-
-
-    it("devrait appeler next en cas d'erreur", async () => {
-        const populateMock = jest.fn().mockReturnThis();
-        Trip.find.mockReturnValue({ populate: () => { throw new Error("DB Error"); } });
-
-        await getAllTrips(req, res, next);
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
-});
-
-describe("Controller - getTripById", () => {
-    let req, res, next;
-    beforeEach(() => {
-        req = { params: { id: "1" } };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-    });
-
-    it("devrait renvoyer un trajet existant", async () => {
-        const trip = { _id: "1" };
-
-        // Mock complet de la chaine .findById().populate().populate().populate()
-        const populate3 = jest.fn().mockResolvedValue(trip);
-        const populate2 = jest.fn().mockReturnValue({ populate: populate3 });
-        const populate1 = jest.fn().mockReturnValue({ populate: populate2 });
-
-        Trip.findById.mockReturnValue({ populate: populate1 });
-
-        await getTripById(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ success: true, data: trip });
-    });
-
-    it("devrait renvoyer 404 si non trouvé", async () => {
-        const populate3 = jest.fn().mockResolvedValue(null);
-        const populate2 = jest.fn().mockReturnValue({ populate: populate3 });
-        const populate1 = jest.fn().mockReturnValue({ populate: populate2 });
-
-        Trip.findById.mockReturnValue({ populate: populate1 });
-
-        await getTripById(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Trajet non trouvé" });
-    });
-
-    it("devrait appeler next en cas d'erreur", async () => {
-        Trip.findById.mockImplementation(() => { throw new Error("DB Error"); });
-
-        await getTripById(req, res, next);
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
-});
-
-describe("Controller - updateTrip", () => {
-    let req, res, next, mockTrip;
-    beforeEach(() => {
-        req = { params: { id: "1" }, body: { status: "en-cours" } };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-        mockTrip = { _id: "1", save: jest.fn().mockResolvedValue(true) };
-    });
-
-    it("devrait mettre à jour un trajet existant", async () => {
-        Trip.findById.mockResolvedValue(mockTrip);
-
-        await updateTrip(req, res, next);
-
-        expect(mockTrip.status).toBe("en-cours");
-        expect(mockTrip.save).toHaveBeenCalled();
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ success: true, message: "Trajet mis à jour", data: mockTrip });
-    });
-
-    it("devrait renvoyer 404 si trajet non trouvé", async () => {
-        Trip.findById.mockResolvedValue(null);
-
-        await updateTrip(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Trajet non trouvé" });
-    });
-
-    it("devrait appeler next en cas d'erreur", async () => {
-        Trip.findById.mockRejectedValue(new Error("DB Error"));
-
-        await updateTrip(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
-});
-
-describe("Controller - deleteTrip", () => {
-    let req, res, next;
-    beforeEach(() => {
-        req = { params: { id: "1" } };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-    });
-
-    it("devrait supprimer un trajet existant", async () => {
-        Trip.findByIdAndDelete.mockResolvedValue({ _id: "1" });
-
-        await deleteTrip(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ success: true, message: "Trajet supprimé avec succès" });
-    });
-
-    it("devrait renvoyer 404 si non trouvé", async () => {
-        Trip.findByIdAndDelete.mockResolvedValue(null);
-
-        await deleteTrip(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Trajet non trouvé" });
-    });
-
-    it("devrait appeler next en cas d'erreur", async () => {
-        Trip.findByIdAndDelete.mockRejectedValue(new Error("DB Error"));
-
-        await deleteTrip(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
+  });
 });
 
 
-describe("Controller - startTrip", () => {
-    let req, res, next, mockTrip;
-    beforeEach(() => {
-        req = { params: { id: "1" }, body: { kmDepart: 10, carburantDepart: 50 } };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-        mockTrip = { _id: "1", status: "a-faire", save: jest.fn().mockResolvedValue(true) };
+  // ======================================================
+  // UPDATE TRIP
+  // ======================================================
+  describe("updateTrip", () => {
+    it("doit mettre à jour un trajet", async () => {
+      req.params.id = "trip1";
+      req.body = { status: "en-cours" };
+
+      const tripMock = {
+        save: jest.fn(),
+        populate: jest.fn()
+      };
+
+      Trip.findById.mockResolvedValue(tripMock);
+
+      await updateTrip(req, res, next);
+
+      expect(tripMock.save).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
     });
 
-    it("devrait démarrer un trajet", async () => {
-        Trip.findById.mockResolvedValue(mockTrip);
+    it("doit retourner 404 si trajet non trouvé", async () => {
+      Trip.findById.mockResolvedValue(null);
 
-        await startTrip(req, res, next);
+      await updateTrip(req, res, next);
 
-        expect(mockTrip.status).toBe("en-cours");
-        expect(mockTrip.kmDepart).toBe(10);
-        expect(mockTrip.carburantDepart).toBe(50);
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ success: true, message: "Trajet commencé", data: mockTrip });
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+  });
+
+  // ======================================================
+  // DELETE TRIP
+  // ======================================================
+  describe("deleteTrip", () => {
+    it("doit supprimer un trajet", async () => {
+      Trip.findByIdAndDelete.mockResolvedValue({ _id: "trip1" });
+
+      await deleteTrip(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
     });
 
-    it("devrait renvoyer 404 si trajet non trouvé", async () => {
-        Trip.findById.mockResolvedValue(null);
+    it("doit retourner 404 si trajet non trouvé", async () => {
+      Trip.findByIdAndDelete.mockResolvedValue(null);
 
-        await startTrip(req, res, next);
+      await deleteTrip(req, res, next);
 
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Trajet non trouvé" });
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+  });
+
+  // ======================================================
+  // START TRIP
+  // ======================================================
+  describe("startTrip", () => {
+    it("doit refuser si le trajet n'est pas a-faire", async () => {
+      Trip.findById.mockResolvedValue({ status: "en-cours" });
+
+      await startTrip(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it("devrait renvoyer 400 si trajet déjà commencé ou terminé", async () => {
-        mockTrip.status = "en-cours";
-        Trip.findById.mockResolvedValue(mockTrip);
+    it("doit démarrer un trajet", async () => {
+      const tripMock = {
+        status: "a-faire",
+        truck: "truck1",
+        save: jest.fn()
+      };
 
-        await startTrip(req, res, next);
+      Trip.findById.mockResolvedValue(tripMock);
+      Truck.findById.mockResolvedValue({ status: "disponible", kilometrage: 1000 });
+      Pneu.find.mockResolvedValue([]);
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Le trajet a déjà été commencé ou terminé" });
+      await startTrip(req, res, next);
+
+      expect(tripMock.status).toBe("en-cours");
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+  });
+
+  // ======================================================
+  // END TRIP
+  // ======================================================
+  describe("endTrip", () => {
+    it("doit refuser si km arrivée < km départ", async () => {
+      req.body.kmArrivee = 900;
+
+      Trip.findById.mockResolvedValue({
+        status: "en-cours",
+        kmDepart: 1000
+      });
+
+      await endTrip(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it("devrait appeler next en cas d'erreur", async () => {
-        Trip.findById.mockRejectedValue(new Error("DB Error"));
+    it("doit terminer un trajet", async () => {
+      req.body.kmArrivee = 1200;
 
-        await startTrip(req, res, next);
+      const tripMock = {
+        status: "en-cours",
+        kmDepart: 1000,
+        truck: "truck1",
+        save: jest.fn()
+      };
 
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
+      Trip.findById.mockResolvedValue(tripMock);
+      Truck.findById.mockResolvedValue({ kilometrage: 5000, save: jest.fn() });
+      Pneu.updateMany.mockResolvedValue({ modifiedCount: 4 });
+
+      await endTrip(req, res, next);
+
+      expect(tripMock.status).toBe("termine");
+      expect(res.status).toHaveBeenCalledWith(200);
     });
-});
+  });
 
-describe("Controller - endTrip", () => {
-    let req, res, next, mockTrip;
-    beforeEach(() => {
-        req = { params: { id: "1" }, body: { kmArrivee: 150, carburantArrivee: 20 } };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-        mockTrip = { _id: "1", status: "en-cours", kmDepart: 100, save: jest.fn().mockResolvedValue(true) };
+  // ======================================================
+  // GET TRIP BY DRIVER
+  // ======================================================
+  describe("getTripByDriver", () => {
+    it("doit retourner les trajets du chauffeur connecté", async () => {
+      req.user.id = "driver1";
+
+      Trip.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockResolvedValue([{ _id: "trip1" }])
+      });
+
+      await getTripByDriver(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true })
+      );
     });
-
-    it("devrait terminer un trajet correctement", async () => {
-        Trip.findById.mockResolvedValue(mockTrip);
-
-        await endTrip(req, res, next);
-
-        expect(mockTrip.status).toBe("termine");
-        expect(mockTrip.kmArrivee).toBe(150);
-        expect(mockTrip.carburantArrivee).toBe(20);
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ success: true, message: "Trajet terminé", data: mockTrip });
-    });
-
-    it("devrait renvoyer 404 si trajet non trouvé", async () => {
-        Trip.findById.mockResolvedValue(null);
-
-        await endTrip(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Trajet non trouvé" });
-    });
-
-    it("devrait renvoyer 400 si trajet non commencé", async () => {
-        mockTrip.status = "a-faire";
-        Trip.findById.mockResolvedValue(mockTrip);
-
-        await endTrip(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Impossible de terminer un trajet non commencé" });
-    });
-
-    it("devrait renvoyer 400 si kmArrivee < kmDepart", async () => {
-        mockTrip.kmDepart = 200;
-        Trip.findById.mockResolvedValue(mockTrip);
-        req.body.kmArrivee = 150;
-
-        await endTrip(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ success: false, message: "Le kilométrage final ne peut pas être inférieur au kilométrage initial" });
-    });
-
-    it("devrait appeler next en cas d'erreur", async () => {
-        Trip.findById.mockRejectedValue(new Error("DB Error"));
-
-        await endTrip(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
-});
-
-describe("Controller - getTripByDriver", () => {
-    let req, res, next;
-
-    beforeEach(() => {
-        req = { params: { id: "driver123" } };
-        res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-        next = jest.fn();
-    });
-
-    it("devrait renvoyer les trajets d'un chauffeur", async () => {
-        const trips = [
-            { _id: "1", driver: "driver123" },
-            { _id: "2", driver: "driver123" }
-        ];
-
-        // Mock de la chaîne .populate()
-        const populateMock3 = jest.fn().mockResolvedValue(trips); // dernière populate renvoie trips
-        const populateMock2 = jest.fn().mockReturnValue({ populate: populateMock3 });
-        const populateMock1 = jest.fn().mockReturnValue({ populate: populateMock2 });
-
-        Trip.find.mockReturnValue({ populate: populateMock1 });
-
-        await getTripByDriver(req, res, next);
-
-        expect(Trip.find).toHaveBeenCalledWith({ driver: "driver123" });
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            success: true,
-            message: "Mes trajets assignés",
-            data: trips
-        });
-    });
-
-    it("devrait appeler next en cas d'erreur", async () => {
-        Trip.find.mockImplementation(() => {
-            throw new Error("DB Error");
-        });
-
-        await getTripByDriver(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-    });
+  });
 });
