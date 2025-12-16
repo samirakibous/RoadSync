@@ -1,0 +1,74 @@
+services:
+  # Base de données MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: roadsync-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: roadsync2024
+      MONGO_INITDB_DATABASE: roadsync
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - roadsync-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Node.js
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: roadsync-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGO_URI: mongodb://admin:roadsync2024@mongodb:27017/roadsync?authSource=admin
+      JWT_SECRET: votre_secret_jwt_super_securise_changez_moi
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USER: votre.email@gmail.com
+      MAIL_PASS: votre_mot_de_passe_app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./backend/public/uploads:/app/public/uploads
+    networks:
+      - roadsync-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React (Vite, sans Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: roadsync-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - roadsync-network
+
+networks:
+  roadsync-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

@@ -27,7 +27,7 @@ import {
   Clock,
   AlertTriangle
 } from "lucide-react";
-import Sidebare from "../components/Sidebare";
+import Sidebare from "../components/sidebare";
 import TripModal from "../components/TripModal";
 
 export default function TripsPage() {
